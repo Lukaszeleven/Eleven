@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ELEVEN — საფეხბურთო მაისურები და სპორტული პროდუქცია">
     <title>ELEVEN — Sports Store</title>
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,50 +12,54 @@
 </head>
 <body>
 
-    <!-- Header / Navbar -->
     <header class="navbar">
         <div class="container nav-container">
             <a href="#" class="logo">ELEVEN</a>
-            <div class="cart-badge" onclick="toggleCartModal()">
-                🛒 <span>კალათა:</span> <strong id="cart-count">0</strong> ნივთი (<span id="cart-total">0</span> ₾)
-            </div>
+            <button class="cart-badge" onclick="toggleCartModal()" aria-label="კალათის გახსნა">
+                🛒 <span class="cart-label">კალათა:</span> <strong id="cart-count">0</strong> ნივთი (<span id="cart-total">0</span> ₾)
+            </button>
         </div>
     </header>
 
-    <!-- Hero / Banner -->
     <section class="hero">
         <div class="container hero-content">
             <h1>აღმოაჩინე საუკეთესო საფეხბურთო მაისურები</h1>
+            <p>აირჩიე, დაამატე კალათაში და შეუკვეთე WhatsApp-ით</p>
         </div>
     </section>
 
-    <!-- Main Content -->
     <main class="container">
-        <h2 class="section-title">პროდუქცია</h2>
+        <div class="toolbar">
+            <h2 class="section-title">პროდუქცია</h2>
+            <input id="search" type="search" placeholder="მოძებნე მაისური..." aria-label="ძებნა">
+        </div>
         <div id="products-container" class="products-grid">
             <p class="loading-text">პროდუქტები იტვირთება...</p>
         </div>
     </main>
 
-    <!-- Cart Modal / Sidebar Panel -->
     <div id="cart-modal" class="cart-modal">
         <div class="cart-modal-content">
             <div class="cart-header">
                 <h3>შენი კალათა</h3>
-                <button class="close-btn" onclick="toggleCartModal()">&times;</button>
+                <button class="close-btn" onclick="toggleCartModal()" aria-label="დახურვა">&times;</button>
             </div>
             <ul id="cart-items-list" class="cart-items"></ul>
             <div class="cart-footer">
+                <div class="order-form">
+                    <input id="order-name" type="text" placeholder="სახელი და გვარი" autocomplete="name">
+                    <input id="order-phone" type="tel" placeholder="ტელეფონი" autocomplete="tel">
+                    <input id="order-address" type="text" placeholder="მისამართი" autocomplete="street-address">
+                </div>
                 <div class="cart-total-text">
                     <span>სულ ჯამი:</span>
                     <strong><span id="modal-cart-total">0</span> ₾</strong>
                 </div>
-                <button class="checkout-btn" onclick="checkout()">შეკვეთის გაფორმება</button>
+                <button class="checkout-btn" onclick="checkout()">შეკვეთის გაგზავნა WhatsApp-ით</button>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer>
         <div class="container footer-content">
             <p>&copy; 2026 ELEVEN. ყველა უფლება დაცულია.</p>
