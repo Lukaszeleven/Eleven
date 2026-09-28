@@ -3,7 +3,7 @@ const SHEET_TITLE = 'ELEVEN Products';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TITLE)}`;
 const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/400x400?text=No+Image';
-const SIZE_ORDER = ['S', 'M', 'L', 'XL', '2L', '3XL'];
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
 let products = [];
 let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]'); // [{id,size,qty}]
