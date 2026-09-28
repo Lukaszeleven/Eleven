@@ -1,8 +1,7 @@
-// ჩასვი შენი Google Sheet ID ქვემოთ ბრჭყალებში:
 const SHEET_ID = '1UHjLOQkVkDI1Y8qmJLHHwRbcRfpc3WSY2iKNpIvWnUY';
-const SHEET_TITLE = 'ELEVEN Products'; // თუ ცხრილის ქვედა ტაბს სახელი შეუცვალე, ის ჩაწერე აქ
+const SHEET_TITLE = 'ELEVEN Products';
 
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_TITLE}`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TITLE)}`;
 
 let products = [];
 let cart = [];
@@ -17,13 +16,16 @@ async function fetchProductsFromGoogleSheets() {
         const jsonData = JSON.parse(text.substring(47, text.length - 2));
         const rows = jsonData.table.rows;
 
-        products = rows.map((row, index) => {
+        // თუ პირველი სტრიქონი სათაურებია (id, title, price...), გამოვტოვოთ სლაისით (.slice(1))
+        const dataRows = (rows[0] && rows[0].c[0] && rows[0].c[0].v === 'id') ? rows.slice(1) : rows;
+
+        products = dataRows.map((row, index) => {
             return {
                 id: row.c[0] ? row.c[0].v : index + 1,
                 title: row.c[1] ? row.c[1].v : '',
                 price: row.c[2] ? row.c[2].v : 0,
-                image: row.c[3] ? row.c[3].v : 'https://via.placeholder.com/200',
-                description: row.c[4] ? row.c[4].v : ''
+                image: (row.c[3] && row.c[3].v) ? row.c[3].v : 'https://via.placeholder.com/200',
+                description: (row.c[4] && row.c[4].v) ? row.c[4].v : ''
             };
         });
 
@@ -37,6 +39,11 @@ async function fetchProductsFromGoogleSheets() {
 function renderProducts() {
     const container = document.getElementById('products-container');
     container.innerHTML = '';
+
+    if (products.length === 0) {
+        container.innerHTML = '<p>პროდუქტები ვერ მოიძებნა ან იტვირთება...</p>';
+        return;
+    }
 
     products.forEach(product => {
         const cardHTML = `
