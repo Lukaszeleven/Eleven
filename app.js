@@ -3,7 +3,7 @@ const SHEET_TITLE = 'ELEVEN Products';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TITLE)}`;
 
 // ჩაწერე შენი WhatsApp ნომერი საერთაშორისო ფორმატით, + და ინტერვალების გარეშე (მაგ: 995555123456)
-const WHATSAPP_NUMBER = '';
+const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/200x200?text=No+Image';
 
 let products = [];
