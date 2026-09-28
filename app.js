@@ -16,15 +16,15 @@ async function fetchProductsFromGoogleSheets() {
         const jsonData = JSON.parse(text.substring(47, text.length - 2));
         const rows = jsonData.table.rows;
 
-        // თუ პირველი სტრიქონი სათაურებია (id, title, price...), გამოვტოვოთ სლაისით (.slice(1))
-        const dataRows = (rows[0] && rows[0].c[0] && rows[0].c[0].v === 'id') ? rows.slice(1) : rows;
+        // თუ პირველი სტრიქონი სათაურებია (id, title...), გამოვტოვოთ
+        const dataRows = (rows[0] && rows[0].c[0] && (rows[0].c[0].v === 'id' || rows[0].c[0].v === 'Id')) ? rows.slice(1) : rows;
 
         products = dataRows.map((row, index) => {
             return {
-                id: row.c[0] ? row.c[0].v : index + 1,
-                title: row.c[1] ? row.c[1].v : '',
-                price: row.c[2] ? row.c[2].v : 0,
-                image: (row.c[3] && row.c[3].v) ? row.c[3].v : 'https://via.placeholder.com/200',
+                id: (row.c[0] && row.c[0].v !== null) ? row.c[0].v : index + 1,
+                title: (row.c[1] && row.c[1].v) ? row.c[1].v : 'პროდუქტი',
+                price: (row.c[2] && row.c[2].v !== null) ? row.c[2].v : 0,
+                image: (row.c[3] && row.c[3].v) ? row.c[3].v : 'https://placehold.co/200x200?text=No+Image',
                 description: (row.c[4] && row.c[4].v) ? row.c[4].v : ''
             };
         });
@@ -41,14 +41,14 @@ function renderProducts() {
     container.innerHTML = '';
 
     if (products.length === 0) {
-        container.innerHTML = '<p>პროდუქტები ვერ მოიძებნა ან იტვირთება...</p>';
+        container.innerHTML = '<p>პროდუქტები ვერ მოიძებნა...</p>';
         return;
     }
 
     products.forEach(product => {
         const cardHTML = `
             <div class="product-card">
-                <img src="${product.image}" alt="${product.title}">
+                <img src="${product.image}" alt="${product.title}" onerror="this.src='https://placehold.co/200x200?text=No+Image'">
                 <h3>${product.title}</h3>
                 <p>${product.description}</p>
                 <div class="price">${product.price} ₾</div>
