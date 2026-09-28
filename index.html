@@ -3,37 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ჩემი ონლაინ მაღაზია</title>
+    <title>ELEVEN — Sports Store</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- საიტის ქუდი / სათაური -->
-    <header>
-        <h1>ონლაინ მაღაზია</h1>
-        <div class="cart-status">
-            🛒 კალათა: <span id="cart-count">0</span> ნივთი | ჯამი: <span id="cart-total">0</span> ₾
+    <!-- Header / Navbar -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">ELEVEN</a>
+            <div class="cart-badge" onclick="toggleCartModal()">
+                🛒 <span>კალათა:</span> <strong id="cart-count">0</strong> ნივთი (<span id="cart-total">0</span> ₾)
+            </div>
         </div>
     </header>
 
-    <!-- მთავარი კონტენტი: პროდუქტების კატალოგი -->
-    <main>
-        <h2>პროდუქცია</h2>
+    <!-- Hero / Banner -->
+    <section class="hero">
+        <div class="container hero-content">
+            <h1>ELEVEN STORE</h1>
+            <p>აღმოაჩინე საუკეთესო სპორტული ფორმები და ეკიპირება</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <h2 class="section-title">პროდუქცია</h2>
         <div id="products-container" class="products-grid">
-            <!-- აქ ავტომატურად გამოჩნდება პროდუქტები JavaScript-ის მეშვეობით -->
+            <p class="loading-text">პროდუქტები იტვირთება...</p>
         </div>
     </main>
 
-    <!-- კალათის სექცია -->
-    <section class="cart-section">
-        <h2>შენი კალათა</h2>
-        <ul id="cart-items-list">
-            <!-- აქ გამოჩნდება კალათაში დამატებული ნივთები -->
-        </ul>
-        <button id="checkout-btn" onclick="checkout()">შეკვეთის გაფორმება</button>
-    </section>
+    <!-- Cart Modal / Sidebar Panel -->
+    <div id="cart-modal" class="cart-modal">
+        <div class="cart-modal-content">
+            <div class="cart-header">
+                <h3>შენი კალათა</h3>
+                <button class="close-btn" onclick="toggleCartModal()">&times;</button>
+            </div>
+            <ul id="cart-items-list" class="cart-items"></ul>
+            <div class="cart-footer">
+                <div class="cart-total-text">
+                    <span>სულ ჯამი:</span>
+                    <strong><span id="modal-cart-total">0</span> ₾</strong>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">შეკვეთის გაფორმება</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- JavaScript ფაილის მიერთება -->
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <p>&copy; 2026 ELEVEN. ყველა უფლება დაცულია.</p>
+        </div>
+    </footer>
+
     <script src="app.js"></script>
 </body>
 </html>
