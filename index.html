@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ELEVEN — საფეხბურთო მაისურები">
+    <meta name="description" content="ELEVEN — საფეხბურთო მაისურები კლუბების მიხედვით">
     <title>ELEVEN — Sports Store</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,28 +15,39 @@
     <header class="navbar">
         <div class="container nav-container">
             <a href="#" class="logo">ELEVEN</a>
+            <input id="search" type="search" placeholder="მოძებნე მაისური..." aria-label="ძებნა">
             <button class="cart-badge" onclick="toggleCartModal()" aria-label="კალათის გახსნა">
-                🛒 <span class="cart-label">კალათა:</span> <strong id="cart-count">0</strong> ნივთი (<span id="cart-total">0</span> ₾)
+                🛒 <span class="cart-label">კალათა:</span> <strong id="cart-count">0</strong> (<span id="cart-total">0</span> ₾)
             </button>
         </div>
+        <nav class="club-nav" id="club-nav" aria-label="კლუბები"></nav>
     </header>
 
-    <section class="hero">
+    <section class="hero" id="hero">
         <span class="hero-number" aria-hidden="true">11</span>
         <div class="container hero-content">
-            <h1>საუკეთესო საფეხბურთო მაისურები</h1>
-            <p>აირჩიე მაისური, დაამატე კალათაში და შეკვეთა WhatsApp-ით გააფორმე.</p>
-            <a href="#products" class="hero-cta">იხილე პროდუქცია</a>
+            <h1 id="hero-title">საუკეთესო საფეხბურთო მაისურები</h1>
+            <p id="hero-sub">აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.</p>
         </div>
     </section>
 
-    <main class="container" id="products">
+    <main class="container" id="shop">
         <div class="toolbar">
-            <h2 class="section-title">პროდუქცია</h2>
-            <input id="search" type="search" placeholder="მოძებნე მაისური..." aria-label="ძებნა">
+            <span id="result-count" class="section-title">პროდუქცია</span>
+            <div class="toolbar-right">
+                <button class="filter-toggle" id="filter-toggle">ფილტრი</button>
+                <select id="sort" aria-label="სორტირება">
+                    <option value="">სორტირება</option>
+                    <option value="asc">ფასი: იაფიდან ძვირისკენ</option>
+                    <option value="desc">ფასი: ძვირიდან იაფისკენ</option>
+                </select>
+            </div>
         </div>
-        <div id="products-container" class="products-grid">
-            <p class="loading-text">პროდუქტები იტვირთება...</p>
+        <div class="shop">
+            <aside class="filters" id="filters"></aside>
+            <div id="products-container" class="products-grid">
+                <p class="loading-text">პროდუქტები იტვირთება...</p>
+            </div>
         </div>
     </main>
 
