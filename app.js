@@ -202,8 +202,7 @@ function render() {
     } else {
         if (f.club) $('hero-title').textContent = f.club;
         else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
-        $('hero-sub').textContent = 'ამაყად ატარე.';
-    }
+     }
 
     const titleParts = [];
     if (f.league) titleParts.push(f.league);
