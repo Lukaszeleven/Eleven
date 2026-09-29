@@ -503,3 +503,9 @@ body,
 #result-count {
     font-family: var(--font-ultra);
 }
+
+/* ===== ლოგო + ფუტერი ===== */
+.logo { display: inline-flex; align-items: center; gap: 10px; }
+.logo-img { height: 32px; width: auto; display: block; }
+
+.footer-content { justify-content: center; text-align: center; }
