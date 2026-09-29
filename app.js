@@ -91,8 +91,8 @@ function render() {
     document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
     $('hero').classList.toggle('compact', !!f.club);
     $('hero-title').textContent = f.club || 'საუკეთესო ონლაინ მაღაზია საქართველოში';
-    $('hero-sub').textContent = f.club ? 'პირველი ხარისხის რეპლიკა' : 'ატარე ამაყად.';
-    $('result-count').textContent = `${f.club || 'ყველა პროდუქცია'} (${list.length})`;
+    $('hero-sub').textContent = f.club ? '' : 'ატარე ამაყად.';
+    $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
 
     const types = uniq(inClub.map(p => p.type));
     const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
