@@ -23,33 +23,37 @@
         <nav class="club-nav" id="club-nav" aria-label="კლუბები"></nav>
     </header>
 
-    <section class="hero" id="hero">
-        <span class="hero-number" aria-hidden="true">11</span>
-        <div class="container hero-content">
-            <h1 id="hero-title">საუკეთესო საფეხბურთო მაისურები</h1>
-            <p id="hero-sub">აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.</p>
-        </div>
-    </section>
+    <div id="shop-view">
+        <section class="hero" id="hero">
+            <span class="hero-number" aria-hidden="true">11</span>
+            <div class="container hero-content">
+                <h1 id="hero-title">საუკეთესო საფეხბურთო მაისურები</h1>
+                <p id="hero-sub">აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.</p>
+            </div>
+        </section>
 
-    <main class="container" id="shop">
-        <div class="toolbar">
-            <span id="result-count" class="section-title">პროდუქცია</span>
-            <div class="toolbar-right">
-                <button class="filter-toggle" id="filter-toggle">ფილტრი</button>
-                <select id="sort" aria-label="სორტირება">
-                    <option value="">სორტირება</option>
-                    <option value="asc">ფასი: იაფიდან ძვირისკენ</option>
-                    <option value="desc">ფასი: ძვირიდან იაფისკენ</option>
-                </select>
+        <main class="container" id="shop">
+            <div class="toolbar">
+                <span id="result-count" class="section-title">პროდუქცია</span>
+                <div class="toolbar-right">
+                    <button class="filter-toggle" id="filter-toggle">ფილტრი</button>
+                    <select id="sort" aria-label="სორტირება">
+                        <option value="">სორტირება</option>
+                        <option value="asc">ფასი: იაფიდან ძვირისკენ</option>
+                        <option value="desc">ფასი: ძვირიდან იაფისკენ</option>
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="shop">
-            <aside class="filters" id="filters"></aside>
-            <div id="products-container" class="products-grid">
-                <p class="loading-text">პროდუქტები იტვირთება...</p>
+            <div class="shop">
+                <aside class="filters" id="filters"></aside>
+                <div id="products-container" class="products-grid">
+                    <p class="loading-text">პროდუქტები იტვირთება...</p>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
+
+    <div id="product-view" hidden></div>
 
     <div id="cart-modal" class="cart-modal">
         <div class="cart-modal-content">
