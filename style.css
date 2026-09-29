@@ -458,3 +458,38 @@ footer .logo { font-size: 1.2rem; }
 @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+/* ===== ELEVEN ფონტი ===== */
+@font-face {
+    font-family: 'Eleven';
+    src: url('Fonts/Eleven-Light.woff2') format('woff2');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Eleven';
+    src: url('Fonts/Eleven-Regular.woff2') format('woff2');
+    font-weight: 400 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Eleven';
+    src: url('Fonts/Eleven-UltraBold.woff2') format('woff2');
+    font-weight: 600 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root { --font: 'Eleven', 'Noto Sans Georgian', system-ui, sans-serif; }
+
+body,
+.logo,
+.hero-number,
+.product-card .price,
+.product-card .price s,
+.pdp-price,
+.pdp-price s,
+.cart-total-text strong {
+    font-family: var(--font);
+}
