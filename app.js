@@ -188,21 +188,19 @@ function render() {
         list = diversifyByClub(list);
     }
 
-    document.querySelectorAll('#club-nav a').forEach(a => {
+document.querySelectorAll('#club-nav a').forEach(a => {
         a.classList.toggle('active', (a.dataset.league || '') === f.league);
     });
-
     $('hero').classList.toggle('compact', !!f.league || !!f.club);
+    
+    // ჰედერის სათაურის მართვა ფილტრების მიხედვით
     if (f.club) {
         $('hero-title').textContent = f.club;
-        $('hero-sub').textContent = f.league || '';
     } else if (f.league) {
         $('hero-title').textContent = f.league;
-        $('hero-sub').textContent = '';
     } else {
-        if (f.club) $('hero-title').textContent = f.club;
-        else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
-     }
+        $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
+    }
 
     const titleParts = [];
     if (f.league) titleParts.push(f.league);
