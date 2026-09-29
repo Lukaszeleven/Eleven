@@ -1,6 +1,6 @@
 const SHEET_ID = '1UHjLOQkVkDI1Y8qmJLHHwRbcRfpc3WSY2iKNpIvWnUY';
 const SHEET_TITLE = 'ELEVEN Products';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TITLE)}`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TITLE)}`;
 const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
@@ -24,61 +24,30 @@ const imgSrc = v => {
     return v.split('/').map(encodeURIComponent).join('/');
 };
 
-// CSV სტრიქონის სწორად დამუშავება (თუ ტექსტში მძიმეებია)
-function parseCSVLine(text) {
-    const result = [];
-    let cell = '';
-    let inQuotes = false;
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        if (char === '"') {
-            inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-            result.push(cell.trim());
-            cell = '';
-        } else {
-            cell += char;
-        }
-    }
-    result.push(cell.trim());
-    return result.map(val => val.replace(/^"|"$/g, '').replace(/""/g, '"'));
-}
-
 async function fetchProducts() {
     try {
-        const response = await fetch(SHEET_URL);
-        const text = await response.text();
-        
-        if (text.trim().startsWith('<!DOCTYPE html>') || text.includes('<html')) {
-            throw new Error('Google Sheets დოკუმენტი არ არის საჯაროდ ხელმისაწვდომი (Public).');
-        }
-
-        const lines = text.split('\n').filter(l => l.trim().length > 0);
-        if (lines.length === 0) throw new Error('ცხრილი ცარიელია.');
-
-        const rows = lines.slice(1); // სათაურის გამოტოვება
-        
-        products = rows.map((line, i) => {
-            const cols = parseCSVLine(line);
-            return {
-                id: cols[0] || i + 1,
-                title: cols[1] || 'პროდუქტი',
-                price: num(cols[2]),
-                image: imgSrc(cols[3]),
-                description: cols[4],
-                club: String(cols[5] || '').trim(),
-                type: String(cols[6] || '').trim(),
-                oldPrice: num(cols[7]),
-                sizes: String(cols[8] || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
-                badge: String(cols[9] || '').trim()
-            };
-        });
-
+        const text = await (await fetch(SHEET_URL)).text();
+        const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+        let rows = json.table.rows;
+        if (json.table.cols.every(c => !c.label)) rows = rows.slice(1);
+        const val = (r, i) => (r.c[i] && r.c[i].v !== null ? r.c[i].v : '');
+        products = rows.map((r, i) => ({
+            id: val(r, 0) || i + 1,
+            title: val(r, 1) || 'პროდუქტი',
+            price: num(val(r, 2)),
+            image: imgSrc(val(r, 3)),
+            description: val(r, 4),
+            club: String(val(r, 5)).trim(),
+            type: String(val(r, 6)).trim(),
+            oldPrice: num(val(r, 7)),
+            sizes: String(val(r, 8)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
+            badge: String(val(r, 9)).trim()
+        }));
         buildClubNav();
         readHash();
     } catch (e) {
-        console.error("ხარვეზი პროდუქტების ჩატვირთვისას:", e);
-        $('products-container').innerHTML = `<p class="loading-text" style="color: #e5322d;">პროდუქტების ჩატვირთვა ვერ მოხერხდა: ${esc(e.message)}</p>`;
+        console.error(e);
+        $('products-container').innerHTML = '<p class="loading-text">პროდუქტების ჩატვირთვა ვერ მოხერხდა. სცადე გვერდის განახლება.</p>';
     }
     updateCartUI();
 }
@@ -199,6 +168,7 @@ function changeQty(i, d) {
 const cartDetails = () => cart.map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) })).filter(l => l.p);
 
 function updateCartUI() {
+    TheLines = cartDetails();
     const lines = cartDetails();
     const count = lines.reduce((s, l) => s + l.qty, 0);
     const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
