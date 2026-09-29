@@ -26,11 +26,30 @@ const imgSrc = v => {
 
 async function fetchProducts() {
     try {
-        const text = await (await fetch(SHEET_URL)).text();
-        const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-        let rows = json.table.rows;
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        
+        // შევამოწმოთ პასუხი HTML-ია თუ არა (თუ Google Sheets არ არის საჯარო, აბრუნებს HTML-ს)
+        if (text.trim().startsWith('<!DOCTYPE html>') || text.includes('<html')) {
+            throw new Error('Google Sheets დოკუმენტი არ არის საჯაროდ ხელმისაწვდომი (Public). გთხოვთ შეამოწმოთ გაზიარების პარამეტრები.');
+        }
+
+        // ამოვიღოთ JSON ნაწილი google.visualization.Query.setResponse(...) ფუნქციიდან
+        const match = text.match(/google\.visualization\.Query\.setResponse\([\s\S]*?\);?/);
+        if (!match) {
+            throw new Error('არასწორი პასუხის ფორმატი Google Sheets-იდან.');
+        }
+        
+        const jsonText = match[0]
+            .replace(/google\.visualization\.Query\.setResponse\(/, '')             .replace(/\);\s*$/, '');
+            
+        const json = JSON.parse(jsonText);
+        let rows = json.table.rows || [];
+        
         if (json.table.cols.every(c => !c.label)) rows = rows.slice(1);
-        const val = (r, i) => (r.c[i] && r.c[i].v !== null ? r.c[i].v : '');
+        
+        const val = (r, i) => (r && r.c && r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined ? r.c[i].v : '');
+        
         products = rows.map((r, i) => ({
             id: val(r, 0) || i + 1,
             title: val(r, 1) || 'პროდუქტი',
@@ -43,11 +62,12 @@ async function fetchProducts() {
             sizes: String(val(r, 8)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
             badge: String(val(r, 9)).trim()
         }));
+
         buildClubNav();
         readHash();
     } catch (e) {
-        console.error(e);
-        $('products-container').innerHTML = '<p class="loading-text">პროდუქტების ჩატვირთვა ვერ მოხერხდა. სცადე გვერდის განახლება.</p>';
+        console.error("ხარვეზი პროდუქტების ჩატვირთვისას:", e);
+        $('products-container').innerHTML = `<p class="loading-text" style="color: #e5322d;">პროდუქტების ჩატვირთვა ვერ მოხერხდა: ${esc(e.message)}</p>`;
     }
     updateCartUI();
 }
