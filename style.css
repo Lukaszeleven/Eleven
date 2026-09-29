@@ -88,8 +88,7 @@ body {
 .cart-badge:hover { transform: translateY(-2px); }
 .cart-badge.bump { transform: scale(1.1); }
 
-/* ===== Club navigation ===== */
-/* ===== Club / League navigation ===== */
+/* ===== League navigation ===== */
 .club-nav {
     background: #f0f1ef;
     border-top: 1px solid var(--line);
@@ -105,9 +104,7 @@ body {
     padding: 0 4px;
 }
 
-.club-list::-webkit-scrollbar {
-    display: none;
-}
+.club-list::-webkit-scrollbar { display: none; }
 
 .club-list a {
     flex: none;
@@ -239,8 +236,8 @@ body {
 /* ===== Product grid ===== */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 36px 24px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 28px 16px;
     margin-bottom: 96px;
 }
 
@@ -255,9 +252,9 @@ body {
     width: 100%;
     aspect-ratio: 1 / 1.05;
     object-fit: contain;
-    padding: 20px;
+    padding: 12px;
     background: var(--card);
-    border-radius: 24px;
+    border-radius: 20px;
     transition: transform .5s var(--ease);
 }
 .product-card:hover img { transform: scale(1.03); }
@@ -463,6 +460,12 @@ footer { margin-top: auto; background: var(--ink); color: #8a948d; padding: 32px
 footer .logo { font-size: 1.2rem; }
 
 /* ===== Responsive ===== */
+@media (max-width: 1100px) {
+    .products-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 @media (max-width: 800px) {
     .shop { grid-template-columns: 1fr; gap: 20px; }
     .filters { display: none; position: static; }
@@ -470,13 +473,20 @@ footer .logo { font-size: 1.2rem; }
     .filter-toggle { display: inline-block; }
     .pdp-grid { grid-template-columns: 1fr; gap: 24px; }
     .pdp-img { position: static; padding: 16px; border-radius: 20px; }
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px 12px;
+    }
 }
 
 @media (max-width: 600px) {
     .cart-label { display: none; }
     .nav-container { flex-wrap: wrap; }
     .navbar #search { order: 3; max-width: none; flex-basis: 100%; }
-    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 14px; }
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px 10px;
+    }
     .product-card img { padding: 10px; border-radius: 18px; }
     .product-card h3 { font-size: .9rem; }
     .product-card .price { font-size: 1.05rem; }
@@ -486,6 +496,7 @@ footer .logo { font-size: 1.2rem; }
 @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
 /* ===== ELEVEN ფონტი ===== */
 @font-face {
     font-family: 'Eleven';
@@ -523,10 +534,9 @@ body,
 .pdp-price s,
 .cart-total-text strong {
     font-family: var(--font);
-    font-synthesis: none; /* ბრაუზერი ხელოვნურ ბოლდს აღარ დაამატებს */
+    font-synthesis: none;
 }
 
-/* UltraBold მხოლოდ ამ ორ ადგილას */
 .hero h1,
 #result-count {
     font-family: var(--font-ultra);
