@@ -16,6 +16,14 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
+// სურათი: ან სრული ბმული (https://...), ან GitHub-ზე ატვირთული ფაილი (მაგ: Chelsea/che1.jpg)
+const imgSrc = v => {
+    v = String(v).trim();
+    if (!v) return NO_IMAGE;
+    if (/^(https?:)?\/\//.test(v)) return v;
+    return v.split('/').map(encodeURIComponent).join('/');
+};
+
 async function fetchProducts() {
     try {
         const text = await (await fetch(SHEET_URL)).text();
@@ -27,7 +35,7 @@ async function fetchProducts() {
             id: val(r, 0) || i + 1,
             title: val(r, 1) || 'პროდუქტი',
             price: num(val(r, 2)),
-            image: val(r, 3) || NO_IMAGE,
+            image: imgSrc(val(r, 3)),
             description: val(r, 4),
             club: String(val(r, 5)).trim(),
             type: String(val(r, 6)).trim(),
