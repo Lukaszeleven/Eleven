@@ -138,10 +138,10 @@ body {
 
 .hero h1 {
     font-weight: 800;
-    font-size: clamp(2rem, 5.5vw, 4rem);
+    font-size: clamp(1.35rem, 6vw, 4rem);
     line-height: 1.12;
     letter-spacing: -.02em;
-    max-width: 14ch;
+    max-width: 15em;
 }
 
 .hero p { margin-top: 20px; max-width: 42ch; color: #a9b3ac; font-size: 1.05rem; }
