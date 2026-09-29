@@ -1,6 +1,6 @@
 const SHEET_ID = '1UHjLOQkVkDI1Y8qmJLHHwRbcRfpc3WSY2iKNpIvWnUY';
 const SHEET_TITLE = 'ELEVEN Products';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TITLE)}`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_TITLE)}`;
 const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
@@ -24,44 +24,55 @@ const imgSrc = v => {
     return v.split('/').map(encodeURIComponent).join('/');
 };
 
+// CSV სტრიქონის სწორად დამუშავება (თუ ტექსტში მძიმეებია)
+function parseCSVLine(text) {
+    const result = [];
+    let cell = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(cell.trim());
+            cell = '';
+        } else {
+            cell += char;
+        }
+    }
+    result.push(cell.trim());
+    return result.map(val => val.replace(/^"|"$/g, '').replace(/""/g, '"'));
+}
+
 async function fetchProducts() {
     try {
         const response = await fetch(SHEET_URL);
         const text = await response.text();
         
-        // შევამოწმოთ პასუხი HTML-ია თუ არა (თუ Google Sheets არ არის საჯარო, აბრუნებს HTML-ს)
         if (text.trim().startsWith('<!DOCTYPE html>') || text.includes('<html')) {
-            throw new Error('Google Sheets დოკუმენტი არ არის საჯაროდ ხელმისაწვდომი (Public). გთხოვთ შეამოწმოთ გაზიარების პარამეტრები.');
+            throw new Error('Google Sheets დოკუმენტი არ არის საჯაროდ ხელმისაწვდომი (Public).');
         }
 
-        // ამოვიღოთ JSON ნაწილი google.visualization.Query.setResponse(...) ფუნქციიდან
-        const match = text.match(/google\.visualization\.Query\.setResponse\([\s\S]*?\);?/);
-        if (!match) {
-            throw new Error('არასწორი პასუხის ფორმატი Google Sheets-იდან.');
-        }
+        const lines = text.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length === 0) throw new Error('ცხრილი ცარიელია.');
+
+        const rows = lines.slice(1); // სათაურის გამოტოვება
         
-        const jsonText = match[0]
-            .replace(/google\.visualization\.Query\.setResponse\(/, '')             .replace(/\);\s*$/, '');
-            
-        const json = JSON.parse(jsonText);
-        let rows = json.table.rows || [];
-        
-        if (json.table.cols.every(c => !c.label)) rows = rows.slice(1);
-        
-        const val = (r, i) => (r && r.c && r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined ? r.c[i].v : '');
-        
-        products = rows.map((r, i) => ({
-            id: val(r, 0) || i + 1,
-            title: val(r, 1) || 'პროდუქტი',
-            price: num(val(r, 2)),
-            image: imgSrc(val(r, 3)),
-            description: val(r, 4),
-            club: String(val(r, 5)).trim(),
-            type: String(val(r, 6)).trim(),
-            oldPrice: num(val(r, 7)),
-            sizes: String(val(r, 8)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
-            badge: String(val(r, 9)).trim()
-        }));
+        products = rows.map((line, i) => {
+            const cols = parseCSVLine(line);
+            return {
+                id: cols[0] || i + 1,
+                title: cols[1] || 'პროდუქტი',
+                price: num(cols[2]),
+                image: imgSrc(cols[3]),
+                description: cols[4],
+                club: String(cols[5] || '').trim(),
+                type: String(cols[6] || '').trim(),
+                oldPrice: num(cols[7]),
+                sizes: String(cols[8] || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
+                badge: String(cols[9] || '').trim()
+            };
+        });
 
         buildClubNav();
         readHash();
@@ -119,7 +130,7 @@ function render() {
     const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
     $('filters').innerHTML =
         (types.length ? `<div class="f-group"><h4>ტიპი</h4>${types.map(t =>
-            `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div>` : '') +
+            `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}>${esc(t)}</label>`).join('')}</div>` : '') +
         (sizes.length ? `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes.map(s =>
             `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`).join('')}</div></div>` : '') +
         '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
@@ -212,7 +223,7 @@ function toggleCartModal() { $('cart-modal').classList.toggle('open'); }
 function checkout() {
     const lines = cartDetails();
     if (!lines.length) return alert('კალათა ცარიელია!');
-    const name = $('order-name').value.trim(), phone = $('order-phone').value.trim(), address = $('order-address').value.trim();
+    const name = $('order-name').value.trim(), phone = $('order-phone').value.trim(), address =$('order-address').value.trim();
     if (!name || !phone || !address) return alert('შეავსე სახელი, ტელეფონი და მისამართი.');
     const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
     const msg = ['ახალი შეკვეთა ELEVEN-ზე:', '',
@@ -258,7 +269,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) toggleCartModal();
 });
 $('search').addEventListener('input', () => {
-    if (/product=/.test(location.hash)) location.hash = ''; // ძებნისას პროდუქტის გვერდიდან მაღაზიაში ბრუნდება
+    if (/product=/.test(location.hash)) location.hash = '';
     else render();
 });
 window.addEventListener('hashchange', readHash);
