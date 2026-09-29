@@ -469,19 +469,22 @@ footer .logo { font-size: 1.2rem; }
 @font-face {
     font-family: 'Eleven';
     src: url('Fonts/Eleven-Regular.woff2') format('woff2');
-    font-weight: 400 500;
+    font-weight: 400 900;
     font-style: normal;
     font-display: swap;
 }
 @font-face {
-    font-family: 'Eleven';
+    font-family: 'Eleven Ultra';
     src: url('Fonts/Eleven-UltraBold.woff2') format('woff2');
-    font-weight: 600 900;
+    font-weight: 100 900;
     font-style: normal;
     font-display: swap;
 }
 
-:root { --font: 'Eleven', 'Noto Sans Georgian', system-ui, sans-serif; }
+:root {
+    --font: 'Eleven', 'Noto Sans Georgian', system-ui, sans-serif;
+    --font-ultra: 'Eleven Ultra', 'Eleven', 'Noto Sans Georgian', system-ui, sans-serif;
+}
 
 body,
 .logo,
@@ -492,4 +495,11 @@ body,
 .pdp-price s,
 .cart-total-text strong {
     font-family: var(--font);
+    font-synthesis: none; /* ბრაუზერი ხელოვნურ ბოლდს აღარ დაამატებს */
+}
+
+/* UltraBold მხოლოდ ამ ორ ადგილას */
+.hero h1,
+#result-count {
+    font-family: var(--font-ultra);
 }
