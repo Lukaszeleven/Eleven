@@ -5,10 +5,22 @@ const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
+// ლიგების სასურველი რიგი (როგორც სურათზე)
+const LEAGUE_ORDER = [
+    'Premier League',
+    'La Liga',
+    'Ligue 1',
+    'Serie A',
+    'Bundesliga',
+    'MLS',
+    'Other Leagues',
+    'International Teams'
+];
+
 let products = [];
-let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]'); // [{id,size,qty}]
+let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]');
 let sel = { size: '', qty: 1 };
-const f = { club: '', types: new Set(), sizes: new Set(), sort: '' };
+const f = { league: '', club: '', types: new Set(), sizes: new Set(), sort: '' };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -16,7 +28,6 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
-// სურათი: ან სრული ბმული (https://...), ან ფაილი (მაგ: Chelsea/Che1.jpg)
 const imgSrc = v => {
     v = String(v).trim();
     if (!v) return NO_IMAGE;
@@ -24,7 +35,7 @@ const imgSrc = v => {
     return v.split('/').map(encodeURIComponent).join('/');
 };
 
-/** Google Sheets-ის ჩატვირთვა JSONP-ით (CORS-ის გარეშე) */
+/** Google Sheets — JSONP (CORS-ის გარეშე) */
 function loadSheetJSONP() {
     return new Promise((resolve, reject) => {
         const cbName = '_gviz_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
@@ -62,7 +73,6 @@ async function fetchProducts() {
     try {
         const json = await loadSheetJSONP();
         let rows = json.table.rows || [];
-        // თუ cols-ს label არ აქვს — პირველი რიგი header-ია
         if (json.table.cols.every(c => !c.label)) rows = rows.slice(1);
 
         const val = (r, i) => (r.c && r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined ? r.c[i].v : '');
@@ -77,10 +87,11 @@ async function fetchProducts() {
             type: String(val(r, 6)).trim(),
             oldPrice: num(val(r, 7)),
             sizes: String(val(r, 8)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
-            badge: String(val(r, 9)).trim()
+            badge: String(val(r, 9)).trim(),
+            league: String(val(r, 10)).trim()
         }));
 
-        buildClubNav();
+        buildLeagueNav();
         readHash();
     } catch (e) {
         console.error('ELEVEN products load error:', e);
@@ -90,12 +101,15 @@ async function fetchProducts() {
     updateCartUI();
 }
 
-// მისამართი: #club=... ან #product=...
 function readHash() {
     if (!products.length) return;
     const pm = location.hash.match(/product=([^&]*)/);
+    const lm = location.hash.match(/league=([^&]*)/);
     const cm = location.hash.match(/club=([^&]*)/);
+
+    f.league = lm ? decodeURIComponent(lm[1]) : '';
     f.club = cm ? decodeURIComponent(cm[1]) : '';
+
     if (pm) showProduct(decodeURIComponent(pm[1]));
     else {
         f.types.clear();
@@ -105,12 +119,25 @@ function readHash() {
     window.scrollTo(0, 0);
 }
 
-function buildClubNav() {
-    const clubs = uniq(products.map(p => p.club));
+function buildLeagueNav() {
+    // Sheet-ში არსებული ლიგები + სასურველი რიგი
+    const fromData = uniq(products.map(p => p.league));
+    const leagues = [
+        ...LEAGUE_ORDER.filter(l => fromData.includes(l)),
+        ...fromData.filter(l => !LEAGUE_ORDER.includes(l))
+    ];
+
     $('club-nav').innerHTML =
         '<div class="container club-list">' +
-        `<a href="#" data-club="">ყველა</a>` +
-        clubs.map(c => `<a href="#club=${enc(c)}" data-club="${esc(c)}">${esc(c)}</a>`).join('') +
+        `<a href="#" data-league="" class="${!f.league ? 'active' : ''}">ყველა</a>` +
+        leagues
+            .map(
+                l =>
+                    `<a href="#league=${enc(l)}" data-league="${esc(l)}" class="${f.league === l ? 'active' : ''}">${esc(
+                        l.toUpperCase()
+                    )}</a>`
+            )
+            .join('') +
         '</div>';
 }
 
@@ -124,37 +151,88 @@ function showShop() {
 }
 
 function render() {
-    const inClub = products.filter(p => !f.club || p.club === f.club);
+    // ჯერ ლიგა, შემდეგ გუნდი
+    let pool = products.filter(p => !f.league || p.league === f.league);
+    if (f.club) pool = pool.filter(p => p.club === f.club);
+
     const q = $('search').value.trim().toLowerCase();
-    const list = inClub.filter(p =>
-        (!f.types.size || f.types.has(p.type)) &&
-        (!f.sizes.size || p.sizes.some(s => f.sizes.has(s))) &&
-        p.title.toLowerCase().includes(q)
+    const list = pool.filter(
+        p =>
+            (!f.types.size || f.types.has(p.type)) &&
+            (!f.sizes.size || p.sizes.some(s => f.sizes.has(s))) &&
+            p.title.toLowerCase().includes(q)
     );
     if (f.sort) list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
 
-    document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
-    $('hero').classList.toggle('compact', !!f.club);
-    if (f.club) $('hero-title').textContent = f.club;
-    else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
-    $('hero-sub').textContent = f.club ? '' : 'ამაყად ატარე.';
-    $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
+    // ლიგის ნავიგაციის active მდგომარეობა
+    document.querySelectorAll('#club-nav a').forEach(a => {
+        a.classList.toggle('active', (a.dataset.league || '') === f.league);
+    });
 
-    const types = uniq(inClub.map(p => p.type));
-    const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
+    $('hero').classList.toggle('compact', !!f.league || !!f.club);
+    if (f.club) {
+        $('hero-title').textContent = f.club;
+        $('hero-sub').textContent = f.league || '';
+    } else if (f.league) {
+        $('hero-title').textContent = f.league;
+        $('hero-sub').textContent = '';
+    } else {
+        $('hero-title').textContent = 'საუკეთესო ონლაინ მაღაზია საქართველოში';
+        $('hero-sub').textContent = 'ამაყად ატარე.';
+    }
 
-    $('filters').innerHTML =
-        (types.length
-            ? `<div class="f-group"><h4>ტიპი</h4>${types
-                  .map(t => `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}> ${esc(t)}</label>`)
-                  .join('')}</div>`
-            : '') +
-        (sizes.length
-            ? `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes
-                  .map(s => `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`)
-                  .join('')}</div></div>`
-            : '') +
-        '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
+    const titleParts = [];
+    if (f.league) titleParts.push(f.league);
+    if (f.club) titleParts.push(f.club);
+    $('result-count').textContent = `${titleParts.length ? titleParts.join(' · ') : 'ყველა პროდუქტი'} (${list.length})`;
+
+    // ფილტრები: გუნდები (მხოლოდ არჩეული ლიგიდან), ტიპი, ზომა
+    const clubsInScope = uniq(
+        products.filter(p => !f.league || p.league === f.league).map(p => p.club)
+    ).sort();
+    const types = uniq(pool.map(p => p.type));
+    const sizes = uniq(pool.flatMap(p => p.sizes)).sort(
+        (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)
+    );
+
+    let filtersHTML = '';
+
+    if (clubsInScope.length) {
+        filtersHTML += `<div class="f-group"><h4>გუნდი</h4><div class="chips">`;
+        filtersHTML += `<button data-fclub="" class="${!f.club ? 'on' : ''}">ყველა</button>`;
+        filtersHTML += clubsInScope
+            .map(
+                c =>
+                    `<button data-fclub="${esc(c)}" class="${f.club === c ? 'on' : ''}">${esc(c)}</button>`
+            )
+            .join('');
+        filtersHTML += `</div></div>`;
+    }
+
+    if (types.length) {
+        filtersHTML += `<div class="f-group"><h4>ტიპი</h4>${types
+            .map(
+                t =>
+                    `<label><input type="checkbox" data-type="${esc(t)}" ${
+                        f.types.has(t) ? 'checked' : ''
+                    }> ${esc(t)}</label>`
+            )
+            .join('')}</div>`;
+    }
+
+    if (sizes.length) {
+        filtersHTML += `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes
+            .map(
+                s =>
+                    `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(
+                        s
+                    )}</button>`
+            )
+            .join('')}</div></div>`;
+    }
+
+    filtersHTML += '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
+    $('filters').innerHTML = filtersHTML;
 
     $('products-container').innerHTML = list.length
         ? list
@@ -162,7 +240,13 @@ function render() {
                   p => `
         <a class="product-card" href="#product=${enc(p.id)}">
             <div class="pimg">
-                ${p.badge ? `<span class="badge">${esc(p.badge)}</span>` : p.oldPrice > p.price ? '<span class="badge sale">SALE</span>' : ''}
+                ${
+                    p.badge
+                        ? `<span class="badge">${esc(p.badge)}</span>`
+                        : p.oldPrice > p.price
+                        ? '<span class="badge sale">SALE</span>'
+                        : ''
+                }
                 <img src="${esc(p.image)}" alt="${esc(p.title)}" loading="lazy" data-fallback>
             </div>
             <h3>${esc(p.title)}</h3>
@@ -184,23 +268,43 @@ function showProduct(id) {
     }
     sel = { size: '', qty: 1 };
     document.title = `${p.title} — ELEVEN`;
-    document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === p.club));
+
+    document.querySelectorAll('#club-nav a').forEach(a => {
+        a.classList.toggle('active', (a.dataset.league || '') === p.league);
+    });
+
     const disc = p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
     const sizes = [...p.sizes].sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
+    const backHref = p.league ? `#league=${enc(p.league)}` : '#';
+
     $('product-view').innerHTML = `
         <div class="container pdp">
-            <a class="back" href="${p.club ? '#club=' + enc(p.club) : '#'}">← ${esc(p.club || 'მაღაზია')}</a>
+            <a class="back" href="${backHref}">← ${esc(p.league || p.club || 'მაღაზია')}</a>
             <div class="pdp-grid">
                 <div class="pdp-img"><img src="${esc(p.image)}" alt="${esc(p.title)}" data-fallback></div>
                 <div class="pdp-info">
-                    <div class="pdp-tags">${disc ? `<span class="tag sale">-${disc}%</span>` : ''}${p.badge ? `<span class="tag">${esc(p.badge)}</span>` : ''}</div>
+                    <div class="pdp-tags">${disc ? `<span class="tag sale">-${disc}%</span>` : ''}${
+                        p.badge ? `<span class="tag">${esc(p.badge)}</span>` : ''
+                    }</div>
                     <h1>${esc(p.title)}</h1>
-                    <p class="pdp-sub">${esc([p.club, p.type].filter(Boolean).join(' · '))}</p>
+                    <p class="pdp-sub">${esc([p.league, p.club, p.type].filter(Boolean).join(' · '))}</p>
                     <div class="pdp-price">${priceHTML(p)}</div>
-                    ${sizes.length ? `<h4>ზომა</h4><div class="psizes" id="psizes">${sizes.map(s => `<button data-psize="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
+                    ${
+                        sizes.length
+                            ? `<h4>ზომა</h4><div class="psizes" id="psizes">${sizes
+                                  .map(s => `<button data-psize="${esc(s)}">${esc(s)}</button>`)
+                                  .join('')}</div>`
+                            : ''
+                    }
                     <div class="pdp-buy">
-                        <div class="pqty"><button data-pqty="-1" aria-label="ერთით ნაკლები">−</button><b id="pqty">1</b><button data-pqty="1" aria-label="ერთით მეტი">+</button></div>
-                        <button class="pdp-add ${sizes.length ? 'wait' : ''}" id="padd" data-padd="${esc(p.id)}">${sizes.length ? 'აირჩიე ზომა' : 'კალათაში დამატება'}</button>
+                        <div class="pqty">
+                            <button data-pqty="-1" aria-label="ერთით ნაკლები">−</button>
+                            <b id="pqty">1</b>
+                            <button data-pqty="1" aria-label="ერთით მეტი">+</button>
+                        </div>
+                        <button class="pdp-add ${sizes.length ? 'wait' : ''}" id="padd" data-padd="${esc(p.id)}">${
+                            sizes.length ? 'აირჩიე ზომა' : 'კალათაში დამატება'
+                        }</button>
                     </div>
                     ${p.description ? `<p class="pdp-desc">${esc(p.description)}</p>` : ''}
                 </div>
@@ -225,9 +329,7 @@ function changeQty(i, d) {
 }
 
 const cartDetails = () =>
-    cart
-        .map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) }))
-        .filter(l => l.p);
+    cart.map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) })).filter(l => l.p);
 
 function updateCartUI() {
     const lines = cartDetails();
@@ -280,8 +382,40 @@ function checkout() {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${enc(msg)}`, '_blank');
 }
 
+function setLeague(league) {
+    f.league = league || '';
+    f.club = '';
+    f.types.clear();
+    f.sizes.clear();
+    if (f.league) location.hash = 'league=' + enc(f.league);
+    else location.hash = '';
+}
+
+function setClub(club) {
+    f.club = club || '';
+    if (f.league && f.club) location.hash = `league=${enc(f.league)}&club=${enc(f.club)}`;
+    else if (f.league) location.hash = 'league=' + enc(f.league);
+    else if (f.club) location.hash = 'club=' + enc(f.club);
+    else location.hash = '';
+    render();
+}
+
 document.addEventListener('click', e => {
     const t = e.target;
+
+    // ლიგის ნავიგაცია
+    if (t.dataset && t.dataset.league !== undefined && t.closest('#club-nav')) {
+        e.preventDefault();
+        setLeague(t.dataset.league);
+        return;
+    }
+
+    // გუნდის ფილტრი
+    if (t.dataset.fclub !== undefined) {
+        setClub(t.dataset.fclub);
+        return;
+    }
+
     if (t.dataset.psize) {
         sel.size = t.dataset.psize;
         document.querySelectorAll('.psizes button').forEach(b => b.classList.toggle('sel', b === t));
@@ -308,6 +442,7 @@ document.addEventListener('click', e => {
     if (t.dataset.clear !== undefined) {
         f.types.clear();
         f.sizes.clear();
+        f.club = '';
         render();
     }
     if (t.id === 'cart-modal') toggleCartModal();
@@ -328,7 +463,8 @@ document.addEventListener('change', e => {
 document.addEventListener(
     'error',
     e => {
-        if (e.target.dataset && e.target.dataset.fallback !== undefined && e.target.src !== NO_IMAGE) e.target.src = NO_IMAGE;
+        if (e.target.dataset && e.target.dataset.fallback !== undefined && e.target.src !== NO_IMAGE)
+            e.target.src = NO_IMAGE;
     },
     true
 );
@@ -338,7 +474,7 @@ document.addEventListener('keydown', e => {
 });
 
 $('search').addEventListener('input', () => {
-    if (/product=/.test(location.hash)) location.hash = '';
+    if (/product=/.test(location.hash)) location.hash = f.league ? 'league=' + enc(f.league) : '';
     else render();
 });
 
