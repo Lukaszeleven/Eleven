@@ -466,173 +466,274 @@ footer .logo { font-size: 1.2rem; }
     }
 }
 
-@media (max-width: 800px) {
-    .shop { grid-template-columns: 1fr; gap: 16px; }
-    .filters { display: none; position: static; }
-    .shop.show-filters .filters { display: block; margin-bottom: 16px; }
-    .filter-toggle { display: inline-block; }
-    .pdp-grid { grid-template-columns: 1fr; gap: 20px; }
-    .pdp-img { position: static; padding: 12px; border-radius: 16px; }
+@media (max-width: 900px) {
+    .shop {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .filters {
+        display: none !important;
+        position: static;
+    }
+
+    .shop.show-filters .filters {
+        display: block !important;
+        margin-bottom: 12px;
+        padding: 16px;
+        background: var(--card);
+        border-radius: 16px;
+    }
+
+    .filter-toggle {
+        display: inline-block !important;
+    }
+
     .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px 12px;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px 10px;
     }
+
+    .pdp-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .pdp-img {
+        position: static !important;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .pdp-img img {
+        max-height: 320px;
+        margin: 0 auto;
+    }
+
     .hero {
-        padding: 48px 0 40px;
-        margin-bottom: 28px;
+        padding: 40px 0 32px;
+        margin-bottom: 24px;
     }
+
     .hero h1 {
-        font-size: clamp(1.5rem, 7vw, 2.2rem);
+        font-size: 1.6rem;
+        line-height: 1.2;
     }
-    .hero p {
-        font-size: 0.95rem;
-        margin-top: 12px;
+
+    .hero-number {
+        font-size: 9rem;
+        opacity: 0.35;
     }
+
     .club-list a {
         padding: 12px 14px;
         font-size: 0.8rem;
     }
+
     .toolbar {
-        gap: 10px;
-        margin-bottom: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
     }
-    .section-title {
-        font-size: 1.25rem;
+
+    .toolbar-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #sort {
+        flex: 1;
     }
 }
 
 @media (max-width: 600px) {
     .container {
-        width: 94%;
+        width: 92%;
     }
 
+    /* --- Navbar fix --- */
     .nav-container {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "logo cart"
+            "search search";
         gap: 10px;
         padding: 10px 0;
+        align-items: center;
     }
 
     .logo {
-        font-size: 1.25rem;
+        grid-area: logo;
+        font-size: 1.2rem;
     }
 
     .logo-img {
-        height: 26px;
-    }
-
-    .cart-label {
-        display: none;
-    }
-
-    .cart-badge {
-        padding: 8px 14px;
-        font-size: 0.85rem;
+        height: 24px;
     }
 
     .navbar #search {
-        order: 3;
-        max-width: none;
-        flex-basis: 100%;
+        grid-area: search;
+        max-width: none !important;
+        width: 100%;
+        flex: none;
+        order: unset;
         padding: 10px 14px;
-        font-size: 0.9rem;
+        font-size: 0.88rem;
     }
 
+    .cart-badge {
+        grid-area: cart;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        justify-self: end;
+    }
+
+    .cart-label {
+        display: none !important;
+    }
+
+    /* --- League bar --- */
     .club-list a {
         padding: 10px 12px;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
     }
 
+    /* --- Hero --- */
     .hero {
-        padding: 36px 0 28px;
-        margin-bottom: 20px;
-    }
-
-    .hero.compact {
-        padding: 24px 0 20px;
+        padding: 28px 0 22px;
         margin-bottom: 16px;
     }
 
+    .hero.compact {
+        padding: 20px 0 16px;
+    }
+
     .hero h1 {
-        font-size: 1.45rem;
-        line-height: 1.2;
+        font-size: 1.35rem;
+    }
+
+    .hero p {
+        font-size: 0.88rem;
+        margin-top: 10px;
     }
 
     .hero-number {
-        font-size: 8rem;
-        opacity: 0.5;
+        font-size: 7rem;
     }
 
+    /* --- Products --- */
     .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 18px 10px;
-        margin-bottom: 48px;
+        gap: 14px 8px;
+        margin-bottom: 40px;
     }
 
     .product-card img {
-        padding: 8px;
-        border-radius: 14px;
+        padding: 6px;
+        border-radius: 12px;
     }
 
     .product-card h3 {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         line-height: 1.3;
     }
 
     .product-card .price {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .badge {
-        top: 8px;
-        left: 8px;
-        padding: 3px 8px;
-        font-size: 0.65rem;
+        top: 6px;
+        left: 6px;
+        padding: 2px 7px;
+        font-size: 0.6rem;
     }
 
+    .section-title {
+        font-size: 1.15rem;
+    }
+
+    /* --- Product page --- */
     .pdp {
-        padding-top: 12px;
-        padding-bottom: 48px;
+        padding-top: 8px;
+        padding-bottom: 40px;
+    }
+
+    .pdp-img {
+        padding: 12px;
+    }
+
+    .pdp-img img {
+        max-height: 280px;
+    }
+
+    .pdp-info h1 {
+        font-size: 1.2rem;
     }
 
     .pdp-price {
-        font-size: 1.5rem;
-        margin: 14px 0 18px;
+        font-size: 1.4rem;
+        margin: 12px 0 16px;
     }
 
     .pdp-buy {
         flex-direction: column;
+        gap: 10px;
+    }
+
+    .pqty {
+        justify-content: center;
+        width: 100%;
     }
 
     .pdp-add {
         width: 100%;
         padding: 14px;
+        font-size: 0.9rem;
     }
 
     .psizes {
         grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+
+    .psizes button {
+        padding: 12px 4px;
+        font-size: 0.85rem;
+    }
+
+    /* --- Cart --- */
+    .cart-modal {
+        align-items: flex-end;
     }
 
     .cart-modal-content {
         max-width: 100%;
-        border-radius: 20px 20px 0 0;
-        padding: 18px;
+        width: 100%;
         height: auto;
-        max-height: 92vh;
-        align-self: flex-end;
+        max-height: 90vh;
+        border-radius: 20px 20px 0 0;
+        padding: 16px;
+        animation: slideUp 0.35s var(--ease);
+    }
+
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: none; }
     }
 
     .cart-header h3 {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
     }
 
     .checkout-btn {
         padding: 14px;
-        font-size: 0.95rem;
+        font-size: 0.92rem;
     }
 
     footer {
-        padding: 24px 0;
-        font-size: 0.8rem;
+        padding: 20px 0;
+        font-size: 0.75rem;
     }
 }
 
