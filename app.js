@@ -7,14 +7,13 @@ const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'
 
 // ლიგების სასურველი რიგი (როგორც სურათზე)
 const LEAGUE_ORDER = [
-    'Premier League',
-    'La Liga',
-    'Ligue 1',
-    'Serie A',
-    'Bundesliga',
-    'MLS',
-    'Other Leagues',
-    'International Teams'
+    'პრემიერ ლიგა',
+    'ლა ლიგა',
+    'ლიგა 1',
+    'სერია ა',
+    'ბუნდესლიგა',
+    'სხვა ლიგები',
+    'ეროვნული ნაკრები'
 ];
 
 let products = [];
