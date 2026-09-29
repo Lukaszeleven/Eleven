@@ -9,9 +9,9 @@ const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'
 const LEAGUE_ORDER = [
     'პრემიერ ლიგა',
     'ლა ლიგა',
-    'ლიგა 1',
-    'სერია ა',
+    'სერია A',
     'ბუნდესლიგა',
+    'ლიგა 1',
     'სხვა ლიგები',
     'ეროვნული ნაკრები'
 ];
@@ -130,13 +130,11 @@ function buildLeagueNav() {
         '<div class="container club-list">' +
         `<a href="#" data-league="" class="${!f.league ? 'active' : ''}">ყველა</a>` +
         leagues
-            .map(
-                l =>
-                    `<a href="#league=${enc(l)}" data-league="${esc(l)}" class="${f.league === l ? 'active' : ''}">${esc(
-                        l.toUpperCase()
-                    )}</a>`
-            )
-            .join('') +
+    .map(
+        l =>
+            `<a href="#league=${enc(l)}" data-league="${esc(l)}" class="${f.league === l ? 'active' : ''}">${esc(l)}</a>`
+    )
+    .join('') +
         '</div>';
 }
 
