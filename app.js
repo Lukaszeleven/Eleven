@@ -16,7 +16,7 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
-// სურათი: ან სრული ბმული (https://...), ან GitHub-ზე ატვირთული ფაილი (მაგ: Chelsea/Che1.jpg)
+// სურათი: ან სრული ბმული (https://...), ან GitHub-ზე ატვირთული ფაილი (მაგ: Chelsea/che1.jpg)
 const imgSrc = v => {
     v = String(v).trim();
     if (!v) return NO_IMAGE;
@@ -52,7 +52,7 @@ async function fetchProducts() {
     updateCartUI();
 }
 
-// მისამართი: #club=ჩელსი (კლუბი) ან #product=CHE1 (პროდუქტის გვერდი)
+// მისამართი: #club=Chelsea (კლუბი) ან #product=CHE1 (პროდუქტის გვერდი)
 function readHash() {
     if (!products.length) return;
     const pm = location.hash.match(/product=([^&]*)/);
@@ -90,16 +90,15 @@ function render() {
 
     document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
     $('hero').classList.toggle('compact', !!f.club);
-    if (f.club) $('hero-title').textContent = f.club;
-    else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
-    $('hero-sub').textContent = f.club ? 'ოფიციალური პროდუქცია' : 'აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.';
-    $('result-count').textContent = `${f.club || 'ყველა პროდუქცია'} (${list.length})`;
+    $('hero-title').textContent = f.club || 'საუკეთესო ონლაინ მაღაზია საქართველოში';
+    $('hero-sub').textContent = f.club ? '' : 'ამაყად ატარე.';
+    $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
 
     const types = uniq(inClub.map(p => p.type));
     const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
     $('filters').innerHTML =
         (types.length ? `<div class="f-group"><h4>ტიპი</h4>${types.map(t =>
-            `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}>${esc(t)}</label>`).join('')}</div>` : '') +
+            `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div>` : '') +
         (sizes.length ? `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes.map(s =>
             `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`).join('')}</div></div>` : '') +
         '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
@@ -168,7 +167,6 @@ function changeQty(i, d) {
 const cartDetails = () => cart.map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) })).filter(l => l.p);
 
 function updateCartUI() {
-    TheLines = cartDetails();
     const lines = cartDetails();
     const count = lines.reduce((s, l) => s + l.qty, 0);
     const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
@@ -193,7 +191,7 @@ function toggleCartModal() { $('cart-modal').classList.toggle('open'); }
 function checkout() {
     const lines = cartDetails();
     if (!lines.length) return alert('კალათა ცარიელია!');
-    const name = $('order-name').value.trim(), phone = $('order-phone').value.trim(), address =$('order-address').value.trim();
+    const name = $('order-name').value.trim(), phone = $('order-phone').value.trim(), address = $('order-address').value.trim();
     if (!name || !phone || !address) return alert('შეავსე სახელი, ტელეფონი და მისამართი.');
     const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
     const msg = ['ახალი შეკვეთა ELEVEN-ზე:', '',
@@ -239,7 +237,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) toggleCartModal();
 });
 $('search').addEventListener('input', () => {
-    if (/product=/.test(location.hash)) location.hash = '';
+    if (/product=/.test(location.hash)) location.hash = ''; // ძებნისას პროდუქტის გვერდიდან მაღაზიაში ბრუნდება
     else render();
 });
 window.addEventListener('hashchange', readHash);
