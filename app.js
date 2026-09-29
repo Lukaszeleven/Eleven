@@ -90,7 +90,8 @@ function render() {
 
     document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
     $('hero').classList.toggle('compact', !!f.club);
-    $('hero-title').textContent = f.club || 'საუკეთესო ონლაინ მაღაზია საქართველოში';
+    if (f.club) $('hero-title').textContent = f.club;
+    else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
     $('hero-sub').textContent = f.club ? '' : 'ამაყად ატარე.';
     $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
 
