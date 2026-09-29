@@ -174,7 +174,8 @@ function render() {
         $('hero-title').textContent = f.league;
         $('hero-sub').textContent = '';
     } else {
-        $('hero-title').textContent = 'საუკეთესო ონლაინ მაღაზია საქართველოში';
+        if (f.club) $('hero-title').textContent = f.club;
+        else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
         $('hero-sub').textContent = 'ამაყად ატარე.';
     }
 
