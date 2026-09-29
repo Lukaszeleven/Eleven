@@ -16,7 +16,7 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
-// სურათი: ან სრული ბმული (https://...), ან GitHub-ზე ატვირთული ფაილი (მაგ: Chelsea/che1.jpg)
+// სურათი: ან სრული ბმული (https://...), ან GitHub-ზე ატვირთული ფაილი (მაგ: Chelsea/Che1.jpg)
 const imgSrc = v => {
     v = String(v).trim();
     if (!v) return NO_IMAGE;
@@ -52,7 +52,7 @@ async function fetchProducts() {
     updateCartUI();
 }
 
-// მისამართი: #club=Chelsea (კლუბი) ან #product=CHE1 (პროდუქტის გვერდი)
+// მისამართი: #club=ჩელსი (კლუბი) ან #product=CHE1 (პროდუქტის გვერდი)
 function readHash() {
     if (!products.length) return;
     const pm = location.hash.match(/product=([^&]*)/);
@@ -92,8 +92,8 @@ function render() {
     $('hero').classList.toggle('compact', !!f.club);
     if (f.club) $('hero-title').textContent = f.club;
     else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
-    $('hero-sub').textContent = f.club ? '' : 'ამაყად ატარე.';
-    $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
+    $('hero-sub').textContent = f.club ? 'ოფიციალური პროდუქცია' : 'აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.';
+    $('result-count').textContent = `${f.club || 'ყველა პროდუქცია'} (${list.length})`;
 
     const types = uniq(inClub.map(p => p.type));
     const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
