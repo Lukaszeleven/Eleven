@@ -90,7 +90,7 @@ function render() {
 
     document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
     $('hero').classList.toggle('compact', !!f.club);
-    $('hero-title').textContent = f.club || 'საუკეთესო საფეხბურთო მაისურები';
+    $('hero-title').textContent = f.club || 'საუკეთესო ონლაინ მაღაზია საქართველოში';
     $('hero-sub').textContent = f.club ? 'ოფიციალური პროდუქცია' : 'აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.';
     $('result-count').textContent = `${f.club || 'ყველა პროდუქცია'} (${list.length})`;
 
