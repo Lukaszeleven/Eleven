@@ -1,12 +1,12 @@
 const SHEET_ID = '1UHjLOQkVkDI1Y8qmJLHHwRbcRfpc3WSY2iKNpIvWnUY';
 const SHEET_TITLE = 'ELEVEN Products';
-const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_TITLE)}`;
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_TITLE)}`;
 const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
 let products = [];
-let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]');
+let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]'); // [{id,size,qty}]
 let sel = { size: '', qty: 1 };
 const f = { club: '', types: new Set(), sizes: new Set(), sort: '' };
 
@@ -16,6 +16,7 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
+// სურათი: ან სრული ბმული (https://...), ან ფაილი (მაგ: Chelsea/Che1.jpg)
 const imgSrc = v => {
     v = String(v).trim();
     if (!v) return NO_IMAGE;
@@ -23,15 +24,51 @@ const imgSrc = v => {
     return v.split('/').map(encodeURIComponent).join('/');
 };
 
+/** Google Sheets-ის ჩატვირთვა JSONP-ით (CORS-ის გარეშე) */
+function loadSheetJSONP() {
+    return new Promise((resolve, reject) => {
+        const cbName = '_gviz_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error('Sheet load timeout'));
+        }, 15000);
+
+        function cleanup() {
+            clearTimeout(timeout);
+            try { delete window[cbName]; } catch (_) {}
+            if (script && script.parentNode) script.parentNode.removeChild(script);
+        }
+
+        window[cbName] = function (data) {
+            cleanup();
+            if (!data || data.status !== 'ok') {
+                reject(new Error((data && data.errors && data.errors[0] && data.errors[0].detailed_message) || 'Sheet error'));
+                return;
+            }
+            resolve(data);
+        };
+
+        const script = document.createElement('script');
+        script.src = SHEET_URL + '&tqx=responseHandler:' + cbName;
+        script.onerror = () => {
+            cleanup();
+            reject(new Error('Script load failed'));
+        };
+        document.head.appendChild(script);
+    });
+}
+
 async function fetchProducts() {
     try {
-        const text = await (await fetch(SHEET_URL)).text();
-        const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-        let rows = json.table.rows;
+        const json = await loadSheetJSONP();
+        let rows = json.table.rows || [];
+        // თუ cols-ს label არ აქვს — პირველი რიგი header-ია
         if (json.table.cols.every(c => !c.label)) rows = rows.slice(1);
-        const val = (r, i) => (r.c[i] && r.c[i].v !== null ? r.c[i].v : '');
+
+        const val = (r, i) => (r.c && r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined ? r.c[i].v : '');
+
         products = rows.map((r, i) => ({
-            id: val(r, 0) || i + 1,
+            id: val(r, 0) || String(i + 1),
             title: val(r, 1) || 'პროდუქტი',
             price: num(val(r, 2)),
             image: imgSrc(val(r, 3)),
@@ -42,30 +79,39 @@ async function fetchProducts() {
             sizes: String(val(r, 8)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
             badge: String(val(r, 9)).trim()
         }));
+
         buildClubNav();
         readHash();
     } catch (e) {
-        console.error(e);
-        $('products-container').innerHTML = '<p class="loading-text">პროდუქტების ჩატვირთვა ვერ მოხერხდა. სცადე გვერდის განახლება.</p>';
+        console.error('ELEVEN products load error:', e);
+        $('products-container').innerHTML =
+            '<p class="loading-text">პროდუქტების ჩატვირთვა ვერ მოხერხდა. სცადე გვერდის განახლება.</p>';
     }
     updateCartUI();
 }
 
+// მისამართი: #club=... ან #product=...
 function readHash() {
     if (!products.length) return;
     const pm = location.hash.match(/product=([^&]*)/);
     const cm = location.hash.match(/club=([^&]*)/);
     f.club = cm ? decodeURIComponent(cm[1]) : '';
     if (pm) showProduct(decodeURIComponent(pm[1]));
-    else { f.types.clear(); f.sizes.clear(); showShop(); }
+    else {
+        f.types.clear();
+        f.sizes.clear();
+        showShop();
+    }
     window.scrollTo(0, 0);
 }
 
 function buildClubNav() {
     const clubs = uniq(products.map(p => p.club));
-    $('club-nav').innerHTML = '<div class="container club-list">' +
+    $('club-nav').innerHTML =
+        '<div class="container club-list">' +
         `<a href="#" data-club="">ყველა</a>` +
-        clubs.map(c => `<a href="#club=${enc(c)}" data-club="${esc(c)}">${esc(c)}</a>`).join('') + '</div>';
+        clubs.map(c => `<a href="#club=${enc(c)}" data-club="${esc(c)}">${esc(c)}</a>`).join('') +
+        '</div>';
 }
 
 const priceHTML = p => `${p.price} ₾ ${p.oldPrice > p.price ? `<s>${p.oldPrice} ₾</s>` : ''}`;
@@ -83,42 +129,56 @@ function render() {
     const list = inClub.filter(p =>
         (!f.types.size || f.types.has(p.type)) &&
         (!f.sizes.size || p.sizes.some(s => f.sizes.has(s))) &&
-        p.title.toLowerCase().includes(q));
-    if (f.sort) list.sort((a, b) => f.sort === 'asc' ? a.price - b.price : b.price - a.price);
+        p.title.toLowerCase().includes(q)
+    );
+    if (f.sort) list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
 
     document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
     $('hero').classList.toggle('compact', !!f.club);
-    if (f.club) $('hero-title').textContent = f.club;
-    else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
-    $('hero-sub').textContent = f.club ? 'ოფიციალური პროდუქცია' : 'აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.';
-    $('result-count').textContent = `${f.club || 'ყველა პროდუქცია'} (${list.length})`;
+    $('hero-title').textContent = f.club || 'საუკეთესო ონლაინ მაღაზია საქართველოში';
+    $('hero-sub').textContent = f.club ? '' : 'ამაყად ატარე.';
+    $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
 
     const types = uniq(inClub.map(p => p.type));
     const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
+
     $('filters').innerHTML =
-        (types.length ? `<div class="f-group"><h4>ტიპი</h4>${types.map(t =>
-            `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}> ${esc(t)}</label>`).join('')}</div>` : '') +
-        (sizes.length ? `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes.map(s =>
-            `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`).join('')}</div></div>` : '') +
+        (types.length
+            ? `<div class="f-group"><h4>ტიპი</h4>${types
+                  .map(t => `<label><input type="checkbox" data-type="${esc(t)}" ${f.types.has(t) ? 'checked' : ''}> ${esc(t)}</label>`)
+                  .join('')}</div>`
+            : '') +
+        (sizes.length
+            ? `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes
+                  .map(s => `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`)
+                  .join('')}</div></div>`
+            : '') +
         '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
 
-    $('products-container').innerHTML = list.length ? list.map(p => `
+    $('products-container').innerHTML = list.length
+        ? list
+              .map(
+                  p => `
         <a class="product-card" href="#product=${enc(p.id)}">
             <div class="pimg">
-                ${p.badge ? `<span class="badge">${esc(p.badge)}</span>` : (p.oldPrice > p.price ? '<span class="badge sale">SALE</span>' : '')}
+                ${p.badge ? `<span class="badge">${esc(p.badge)}</span>` : p.oldPrice > p.price ? '<span class="badge sale">SALE</span>' : ''}
                 <img src="${esc(p.image)}" alt="${esc(p.title)}" loading="lazy" data-fallback>
             </div>
             <h3>${esc(p.title)}</h3>
             <div class="price">${priceHTML(p)}</div>
-        </a>`).join('') : '<p class="loading-text">ამ პარამეტრებით პროდუქტი ვერ მოიძებნა.</p>';
+        </a>`
+              )
+              .join('')
+        : '<p class="loading-text">ამ პარამეტრებით პროდუქტი ვერ მოიძებნა.</p>';
 }
 
 function showProduct(id) {
     $('shop-view').hidden = true;
     $('product-view').hidden = false;
-    const p = products.find(x => x.id == id);
+    const p = products.find(x => String(x.id) === String(id));
     if (!p) {
-        $('product-view').innerHTML = '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="#">დაბრუნდი მაღაზიაში</a></p></div>';
+        $('product-view').innerHTML =
+            '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="#">დაბრუნდი მაღაზიაში</a></p></div>';
         return;
     }
     sel = { size: '', qty: 1 };
@@ -149,7 +209,7 @@ function showProduct(id) {
 
 function addToCart(id, size, qty = 1) {
     const line = cart.find(l => l.id == id && l.size == size);
-    line ? line.qty += qty : cart.push({ id, size, qty });
+    line ? (line.qty += qty) : cart.push({ id, size, qty });
     updateCartUI();
     const b = document.querySelector('.cart-badge');
     b.classList.add('bump');
@@ -163,7 +223,10 @@ function changeQty(i, d) {
     updateCartUI();
 }
 
-const cartDetails = () => cart.map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) })).filter(l => l.p);
+const cartDetails = () =>
+    cart
+        .map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) }))
+        .filter(l => l.p);
 
 function updateCartUI() {
     const lines = cartDetails();
@@ -173,7 +236,10 @@ function updateCartUI() {
     $('cart-count').textContent = count;
     $('cart-total').textContent = total;
     $('modal-cart-total').textContent = total;
-    $('cart-items-list').innerHTML = lines.length ? lines.map(l => `
+    $('cart-items-list').innerHTML = lines.length
+        ? lines
+              .map(
+                  l => `
         <li>
             <span class="ci-title">${esc(l.p.title)}${l.size ? ` <small>(${esc(l.size)})</small>` : ''}</span>
             <span class="qty">
@@ -182,20 +248,34 @@ function updateCartUI() {
                 <button data-qty="${l.i}" data-d="1" aria-label="ერთით მეტი">+</button>
             </span>
             <strong>${l.qty * l.p.price} ₾</strong>
-        </li>`).join('') : '<li class="empty">კალათა ცარიელია</li>';
+        </li>`
+              )
+              .join('')
+        : '<li class="empty">კალათა ცარიელია</li>';
 }
 
-function toggleCartModal() { $('cart-modal').classList.toggle('open'); }
+function toggleCartModal() {
+    $('cart-modal').classList.toggle('open');
+}
 
 function checkout() {
     const lines = cartDetails();
     if (!lines.length) return alert('კალათა ცარიელია!');
-    const name = $('order-name').value.trim(), phone = $('order-phone').value.trim(), address = $('order-address').value.trim();
+    const name = $('order-name').value.trim(),
+        phone = $('order-phone').value.trim(),
+        address = $('order-address').value.trim();
     if (!name || !phone || !address) return alert('შეავსე სახელი, ტელეფონი და მისამართი.');
     const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
-    const msg = ['ახალი შეკვეთა ELEVEN-ზე:', '',
-        ...lines.map(l => `• ${l.p.title}${l.size ? ' (' + l.size + ')' : ''} × ${l.qty} = ${l.qty * l.p.price} ₾`), '',
-        `სულ: ${total} ₾`, `სახელი: ${name}`, `ტელეფონი: ${phone}`, `მისამართი: ${address}`].join('\n');
+    const msg = [
+        'ახალი შეკვეთა ELEVEN-ზე:',
+        '',
+        ...lines.map(l => `• ${l.p.title}${l.size ? ' (' + l.size + ')' : ''} × ${l.qty} = ${l.qty * l.p.price} ₾`),
+        '',
+        `სულ: ${total} ₾`,
+        `სახელი: ${name}`,
+        `ტელეფონი: ${phone}`,
+        `მისამართი: ${address}`
+    ].join('\n');
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${enc(msg)}`, '_blank');
 }
 
@@ -215,30 +295,52 @@ document.addEventListener('click', e => {
     }
     if (t.dataset.padd) {
         const p = products.find(x => x.id == t.dataset.padd);
-        if (p.sizes.length && !sel.size) return $('psizes').classList.add('need');
+        if (p && p.sizes.length && !sel.size) return $('psizes').classList.add('need');
         addToCart(t.dataset.padd, sel.size, sel.qty);
         toggleCartModal();
     }
     if (t.dataset.qty) changeQty(Number(t.dataset.qty), Number(t.dataset.d));
-    if (t.dataset.fsize) { f.sizes.has(t.dataset.fsize) ? f.sizes.delete(t.dataset.fsize) : f.sizes.add(t.dataset.fsize); render(); }
-    if (t.dataset.clear !== undefined) { f.types.clear(); f.sizes.clear(); render(); }
+    if (t.dataset.fsize) {
+        f.sizes.has(t.dataset.fsize) ? f.sizes.delete(t.dataset.fsize) : f.sizes.add(t.dataset.fsize);
+        render();
+    }
+    if (t.dataset.clear !== undefined) {
+        f.types.clear();
+        f.sizes.clear();
+        render();
+    }
     if (t.id === 'cart-modal') toggleCartModal();
     if (t.id === 'filter-toggle') document.querySelector('.shop').classList.toggle('show-filters');
 });
+
 document.addEventListener('change', e => {
-    if (e.target.dataset.type) { e.target.checked ? f.types.add(e.target.dataset.type) : f.types.delete(e.target.dataset.type); render(); }
-    if (e.target.id === 'sort') { f.sort = e.target.value; render(); }
+    if (e.target.dataset.type) {
+        e.target.checked ? f.types.add(e.target.dataset.type) : f.types.delete(e.target.dataset.type);
+        render();
+    }
+    if (e.target.id === 'sort') {
+        f.sort = e.target.value;
+        render();
+    }
 });
-document.addEventListener('error', e => {
-    if (e.target.dataset && e.target.dataset.fallback !== undefined && e.target.src !== NO_IMAGE) e.target.src = NO_IMAGE;
-}, true);
+
+document.addEventListener(
+    'error',
+    e => {
+        if (e.target.dataset && e.target.dataset.fallback !== undefined && e.target.src !== NO_IMAGE) e.target.src = NO_IMAGE;
+    },
+    true
+);
+
 document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) toggleCartModal();
 });
+
 $('search').addEventListener('input', () => {
     if (/product=/.test(location.hash)) location.hash = '';
     else render();
 });
+
 window.addEventListener('hashchange', readHash);
 
 fetchProducts();
