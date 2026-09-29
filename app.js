@@ -5,13 +5,12 @@ const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
-// ლიგების სასურველი რიგი (როგორც სურათზე)
 const LEAGUE_ORDER = [
     'პრემიერ ლიგა',
     'ლა ლიგა',
+    'ლიგა 1',
     'სერია A',
     'ბუნდესლიგა',
-    'ლიგა 1',
     'სხვა ლიგები',
     'ეროვნული ნაკრები'
 ];
@@ -26,6 +25,31 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
+
+/** პროდუქტების შერევა გუნდების მიხედვით — რიგში სხვადასხვა კლუბი ჩანს */
+function diversifyByClub(list) {
+    const byClub = {};
+    list.forEach(p => {
+        const key = p.club || '_';
+        if (!byClub[key]) byClub[key] = [];
+        byClub[key].push(p);
+    });
+    const clubs = Object.keys(byClub);
+    const result = [];
+    let i = 0;
+    let added = true;
+    while (added) {
+        added = false;
+        for (const c of clubs) {
+            if (byClub[c][i]) {
+                result.push(byClub[c][i]);
+                added = true;
+            }
+        }
+        i++;
+    }
+    return result;
+}
 
 const imgSrc = v => {
     v = String(v).trim();
@@ -119,7 +143,6 @@ function readHash() {
 }
 
 function buildLeagueNav() {
-    // Sheet-ში არსებული ლიგები + სასურველი რიგი
     const fromData = uniq(products.map(p => p.league));
     const leagues = [
         ...LEAGUE_ORDER.filter(l => fromData.includes(l)),
@@ -130,11 +153,11 @@ function buildLeagueNav() {
         '<div class="container club-list">' +
         `<a href="#" data-league="" class="${!f.league ? 'active' : ''}">ყველა</a>` +
         leagues
-    .map(
-        l =>
-            `<a href="#league=${enc(l)}" data-league="${esc(l)}" class="${f.league === l ? 'active' : ''}">${esc(l)}</a>`
-    )
-    .join('') +
+            .map(
+                l =>
+                    `<a href="#league=${enc(l)}" data-league="${esc(l)}" class="${f.league === l ? 'active' : ''}">${esc(l)}</a>`
+            )
+            .join('') +
         '</div>';
 }
 
@@ -148,20 +171,23 @@ function showShop() {
 }
 
 function render() {
-    // ჯერ ლიგა, შემდეგ გუნდი
     let pool = products.filter(p => !f.league || p.league === f.league);
     if (f.club) pool = pool.filter(p => p.club === f.club);
 
     const q = $('search').value.trim().toLowerCase();
-    const list = pool.filter(
+    let list = pool.filter(
         p =>
             (!f.types.size || f.types.has(p.type)) &&
             (!f.sizes.size || p.sizes.some(s => f.sizes.has(s))) &&
             p.title.toLowerCase().includes(q)
     );
-    if (f.sort) list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
 
-    // ლიგის ნავიგაციის active მდგომარეობა
+    if (f.sort) {
+        list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
+    } else if (!f.league && !f.club && !q) {
+        list = diversifyByClub(list);
+    }
+
     document.querySelectorAll('#club-nav a').forEach(a => {
         a.classList.toggle('active', (a.dataset.league || '') === f.league);
     });
@@ -184,7 +210,6 @@ function render() {
     if (f.club) titleParts.push(f.club);
     $('result-count').textContent = `${titleParts.length ? titleParts.join(' · ') : 'ყველა პროდუქტი'} (${list.length})`;
 
-    // ფილტრები: გუნდები (მხოლოდ არჩეული ლიგიდან), ტიპი, ზომა
     const clubsInScope = uniq(
         products.filter(p => !f.league || p.league === f.league).map(p => p.club)
     ).sort();
@@ -199,10 +224,7 @@ function render() {
         filtersHTML += `<div class="f-group"><h4>გუნდი</h4><div class="chips">`;
         filtersHTML += `<button data-fclub="" class="${!f.club ? 'on' : ''}">ყველა</button>`;
         filtersHTML += clubsInScope
-            .map(
-                c =>
-                    `<button data-fclub="${esc(c)}" class="${f.club === c ? 'on' : ''}">${esc(c)}</button>`
-            )
+            .map(c => `<button data-fclub="${esc(c)}" class="${f.club === c ? 'on' : ''}">${esc(c)}</button>`)
             .join('');
         filtersHTML += `</div></div>`;
     }
@@ -220,12 +242,7 @@ function render() {
 
     if (sizes.length) {
         filtersHTML += `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes
-            .map(
-                s =>
-                    `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(
-                        s
-                    )}</button>`
-            )
+            .map(s => `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`)
             .join('')}</div></div>`;
     }
 
@@ -401,14 +418,12 @@ function setClub(club) {
 document.addEventListener('click', e => {
     const t = e.target;
 
-    // ლიგის ნავიგაცია
     if (t.dataset && t.dataset.league !== undefined && t.closest('#club-nav')) {
         e.preventDefault();
         setLeague(t.dataset.league);
         return;
     }
 
-    // გუნდის ფილტრი
     if (t.dataset.fclub !== undefined) {
         setClub(t.dataset.fclub);
         return;
