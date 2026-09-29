@@ -6,7 +6,7 @@ const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
 let products = [];
-let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]'); // [{id,size,qty}]
+let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]');
 let sel = { size: '', qty: 1 };
 const f = { club: '', types: new Set(), sizes: new Set(), sort: '' };
 
@@ -16,7 +16,6 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
-// სურათი: ან სრული ბმული (https://...), ან GitHub-ზე ატვირთული ფაილი (მაგ: Chelsea/che1.jpg)
 const imgSrc = v => {
     v = String(v).trim();
     if (!v) return NO_IMAGE;
@@ -52,7 +51,6 @@ async function fetchProducts() {
     updateCartUI();
 }
 
-// მისამართი: #club=Chelsea (კლუბი) ან #product=CHE1 (პროდუქტის გვერდი)
 function readHash() {
     if (!products.length) return;
     const pm = location.hash.match(/product=([^&]*)/);
@@ -90,9 +88,10 @@ function render() {
 
     document.querySelectorAll('#club-nav a').forEach(a => a.classList.toggle('active', a.dataset.club === f.club));
     $('hero').classList.toggle('compact', !!f.club);
-    $('hero-title').textContent = f.club || 'საუკეთესო ონლაინ მაღაზია საქართველოში';
-    $('hero-sub').textContent = f.club ? '' : 'ამაყად ატარე.';
-    $('result-count').textContent = `${f.club || 'ყველა პროდუქტი'} (${list.length})`;
+    if (f.club) $('hero-title').textContent = f.club;
+    else $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
+    $('hero-sub').textContent = f.club ? 'ოფიციალური პროდუქცია' : 'აირჩიე კლუბი, ზომა და შეკვეთა WhatsApp-ით გააფორმე.';
+    $('result-count').textContent = `${f.club || 'ყველა პროდუქცია'} (${list.length})`;
 
     const types = uniq(inClub.map(p => p.type));
     const sizes = uniq(inClub.flatMap(p => p.sizes)).sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
@@ -237,7 +236,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) toggleCartModal();
 });
 $('search').addEventListener('input', () => {
-    if (/product=/.test(location.hash)) location.hash = ''; // ძებნისას პროდუქტის გვერდიდან მაღაზიაში ბრუნდება
+    if (/product=/.test(location.hash)) location.hash = '';
     else render();
 });
 window.addEventListener('hashchange', readHash);
