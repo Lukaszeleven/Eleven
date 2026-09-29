@@ -89,21 +89,23 @@ body {
 .cart-badge.bump { transform: scale(1.1); }
 
 /* ===== Club navigation ===== */
-.club-nav { border-top: 1px solid rgba(255, 255, 255, .1); }
-.club-list { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-.club-list::-webkit-scrollbar { display: none; }
-.club-list a {
-    flex: none;
-    padding: 12px 16px;
-    color: #c5cdc7;
-    text-decoration: none;
-    font-size: .9rem;
-    font-weight: 600;
-    border-bottom: 3px solid transparent;
-    transition: color .2s, border-color .2s;
+.club-nav {
+    background: #f0f1ef;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
 }
-.club-list a:hover { color: #fff; }
-.club-list a.active { color: var(--accent); border-bottom-color: var(--accent); }
+.club-list a {
+    color: #3a3f3c;
+    font-size: .82rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.club-list a:hover { color: var(--pitch); }
+.club-list a.active {
+    color: var(--pitch);
+    border-bottom-color: var(--pitch);
+}
 
 /* ===== Hero ===== */
 .hero {
