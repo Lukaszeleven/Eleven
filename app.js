@@ -50,12 +50,9 @@ function diversifyByClub(list) {
     return result;
 }
 
-const imgSrc = v => {
-    v = String(v).trim();
-    if (!v) return NO_IMAGE;
-    if (/^(https?:)?\/\//.test(v)) return v;
-    return v.split('/').map(encodeURIComponent).join('/');
-};
+/* ===== სურათები: images/{ID}.{გაფართოება} ===== */
+const IMG_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG', 'WEBP'];
+const imgUrl = (id, n = 0) => `images/${enc(String(id).trim())}.${IMG_EXTS[n]}`;
 
 function loadSheetJSONP() {
     return new Promise((resolve, reject) => {
@@ -98,19 +95,22 @@ async function fetchProducts() {
 
         const val = (r, i) => (r.c && r.c[i] && r.c[i].v !== null && r.c[i].v !== undefined ? r.c[i].v : '');
 
-        products = rows.map((r, i) => ({
-            id: val(r, 0) || String(i + 1),
-            title: val(r, 1) || 'პროდუქტი',
-            price: num(val(r, 2)),
-            image: imgSrc(val(r, 3)),
-            description: val(r, 4),
-            club: String(val(r, 5)).trim(),
-            type: String(val(r, 6)).trim(),
-            oldPrice: num(val(r, 7)),
-            sizes: String(val(r, 8)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
-            badge: String(val(r, 9)).trim(),
-            league: String(val(r, 10)).trim()
-        }));
+        // სვეტები: 0 ID | 1 სათაური | 2 ფასი | 3 აღწერა | 4 კლუბი | 5 ტიპი | 6 ძველი ფასი | 7 ზომები | 8 ბეჯი | 9 ლიგა
+        products = rows.map((r, i) => {
+            const id = String(val(r, 0) || i + 1).trim();
+            return {
+                id,
+                title: val(r, 1) || 'პროდუქტი',
+                price: num(val(r, 2)),
+                description: val(r, 3),
+                club: String(val(r, 4)).trim(),
+                type: String(val(r, 5)).trim(),
+                oldPrice: num(val(r, 6)),
+                sizes: String(val(r, 7)).split(',').map(s => s.trim().toUpperCase()).filter(Boolean),
+                badge: String(val(r, 8)).trim(),
+                league: String(val(r, 9)).trim()
+            };
+        });
 
         buildLeagueNav();
         readHash();
@@ -247,7 +247,7 @@ function render() {
                         ? '<span class="badge sale">SALE</span>'
                         : ''
                 }
-                <img src="${esc(p.image)}" alt="${esc(p.title)}" loading="lazy" data-fallback>
+                <img src="${imgUrl(p.id)}" alt="${esc(p.title)}" loading="lazy" data-fallback data-pid="${esc(p.id)}">
             </div>
             <h3>${esc(p.title)}</h3>
             <div class="price">${priceHTML(p)}</div>
@@ -263,7 +263,7 @@ function showProduct(id) {
     const p = products.find(x => String(x.id) === String(id));
     if (!p) {
         $('product-view').innerHTML =
-            '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="/">დაბრუნდი მაღაზიაში</a></p></div>';
+            '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="./">დაბრუნდი მაღაზიაში</a></p></div>';
         return;
     }
     sel = { size: '', qty: 1 };
@@ -275,13 +275,13 @@ function showProduct(id) {
 
     const disc = p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
     const sizes = [...p.sizes].sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
-    const backHref = p.league ? `#league=${enc(p.league)}` : '/';
+    const backHref = p.league ? `#league=${enc(p.league)}` : './';
 
     $('product-view').innerHTML = `
         <div class="container pdp">
             <a class="back" href="${backHref}">← ${esc(p.league || p.club || 'მაღაზია')}</a>
             <div class="pdp-grid">
-                <div class="pdp-img"><img src="${esc(p.image)}" alt="${esc(p.title)}" data-fallback></div>
+                <div class="pdp-img"><img src="${imgUrl(p.id)}" alt="${esc(p.title)}" data-fallback data-pid="${esc(p.id)}"></div>
                 <div class="pdp-info">
                     <div class="pdp-tags">${disc ? `<span class="tag sale">-${disc}%</span>` : ''}${
                         p.badge ? `<span class="tag">${esc(p.badge)}</span>` : ''
@@ -458,11 +458,20 @@ document.addEventListener('change', e => {
     }
 });
 
+// სურათის ფორმატის ავტომატური მიგნება: jpg → jpeg → png → webp → No Image
 document.addEventListener(
     'error',
     e => {
-        if (e.target.dataset && e.target.dataset.fallback !== undefined && e.target.src !== NO_IMAGE)
-            e.target.src = NO_IMAGE;
+        const img = e.target;
+        if (!img.dataset || img.dataset.fallback === undefined || img.dataset.done) return;
+        const n = Number(img.dataset.ext || 0) + 1;
+        if (n < IMG_EXTS.length) {
+            img.dataset.ext = n;
+            img.src = imgUrl(img.dataset.pid, n);
+        } else {
+            img.dataset.done = '1';
+            img.src = NO_IMAGE;
+        }
     },
     true
 );
