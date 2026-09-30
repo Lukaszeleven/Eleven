@@ -299,7 +299,7 @@ function showProduct(id) {
                             : ''
                     }
                     <button class="pers-btn" data-pers-open>✎ პერსონალიზაცია</button>
-                    <p class="pers-summary" id="pers-summary" hidden></p>
+                    <div class="pers-summary" id="pers-summary" hidden></div>
                     <div class="pdp-buy">
                         <div class="pqty">
                             <button data-pqty="-1" aria-label="ერთით ნაკლები">−</button>
@@ -432,7 +432,6 @@ function ensurePersModal() {
             </label>
             <div class="pers-total"><span>პერსონალიზაცია</span><strong><span id="pers-sum">0</span> ₾</strong></div>
             <button class="checkout-btn" data-pers-ok>დადასტურება</button>
-            <button class="f-clear pers-clear" data-pers-clear>გასუფთავება</button>
         </div>`;
     document.body.appendChild(d);
 }
@@ -463,10 +462,21 @@ function closePers() {
 function renderPers() {
     const box = $('pers-summary');
     if (!box) return;
-    const extra = extraOf(sel);
     const text = persText(sel);
     box.hidden = !text;
-    box.innerHTML = text ? `✎ ${esc(text)} <b>+${extra} ₾</b>` : '';
+    if (!text) {
+        box.innerHTML = '';
+        return;
+    }
+    const add = $('padd');
+    const p = add && products.find(x => String(x.id) === String(add.dataset.padd));
+    const total = p ? (p.price + extraOf(sel)) * sel.qty : 0;
+    box.innerHTML = `
+        <div class="pers-sum-top">
+            <span class="pers-sum-text">✎ ${esc(text)} <b>+${extraOf(sel)} ₾</b></span>
+            <button class="pers-x" data-pers-clear aria-label="პერსონალიზაციის წაშლა">&times;</button>
+        </div>
+        <div class="pers-sum-total"><span>ჯამური ფასი${sel.qty > 1 ? ' (' + sel.qty + ' ც.)' : ''}</span><strong>${total} ₾</strong></div>`;
 }
 
 function savePers() {
@@ -526,6 +536,7 @@ document.addEventListener('click', e => {
     if (t.dataset.pqty) {
         sel.qty = Math.max(1, sel.qty + Number(t.dataset.pqty));
         $('pqty').textContent = sel.qty;
+        renderPers();
     }
     if (t.dataset.padd) {
         const p = products.find(x => x.id == t.dataset.padd);
