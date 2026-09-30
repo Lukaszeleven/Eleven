@@ -11,6 +11,7 @@ const LEAGUE_ORDER = [
     'ლიგა 1',
     'სერია A',
     'ბუნდესლიგა',
+    'MLS',
     'სხვა ლიგები',
     'ეროვნული ნაკრებები'
 ];
@@ -26,7 +27,6 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
-/** პროდუქტების შერევა გუნდების მიხედვით */
 function diversifyByClub(list) {
     const byClub = {};
     list.forEach(p => {
@@ -58,7 +58,6 @@ const imgSrc = v => {
     return v.split('/').map(encodeURIComponent).join('/');
 };
 
-/** Google Sheets — JSONP (CORS-ის გარეშე) */
 function loadSheetJSONP() {
     return new Promise((resolve, reject) => {
         const cbName = '_gviz_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
@@ -142,7 +141,6 @@ function readHash() {
     window.scrollTo(0, 0);
 }
 
-/** ზოლი HTML-შია — მხოლოდ active კლასს ვაყენებთ */
 function buildLeagueNav() {
     document.querySelectorAll('#club-nav a').forEach(a => {
         a.classList.toggle('active', (a.dataset.league || '') === f.league);
@@ -180,8 +178,11 @@ function render() {
 
     $('hero').classList.toggle('compact', !!f.league || !!f.club);
 
-    // სათაური ყოველთვის იგივე
-    $('hero-title').textContent = 'ატარე სიამაყით';
+    if (f.league || f.club) {
+        $('hero-title').textContent = 'ატარე სიამაყით';
+    } else {
+        $('hero-title').innerHTML = 'საუკეთესო<br>სპორტული მაღაზია<br>საქართველოში';
+    }
 
     const heroSub = $('hero-sub');
     if (heroSub) {
