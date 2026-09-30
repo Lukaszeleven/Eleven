@@ -17,7 +17,9 @@ const LEAGUE_ORDER = [
 
 let products = [];
 let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]');
-let sel = { size: '', qty: 1 };
+const PERS_NAME_PRICE = 15;
+const PERS_PATCH_PRICE = 10;
+let sel = { size: '', qty: 1, name: '', patches: false };
 const f = { league: '', club: '', types: new Set(), sizes: new Set(), sort: '' };
 
 const $ = id => document.getElementById(id);
@@ -97,7 +99,7 @@ async function fetchProducts() {
 
         // სვეტები: 0 ID | 1 სათაური | 2 ფასი | 3 აღწერა | 4 კლუბი | 5 ტიპი | 6 ძველი ფასი | 7 ზომები | 8 ბეჯი | 9 ლიგა
         products = rows.map((r, i) => {
-            const id = String(val(r, 0) || i + 1).trim();
+            const id = String(val(r, 0) || i + 1).trim().replace(/\.(jpe?g|png|webp)$/i, '');
             return {
                 id,
                 title: val(r, 1) || 'პროდუქტი',
@@ -266,7 +268,7 @@ function showProduct(id) {
             '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="./">დაბრუნდი მაღაზიაში</a></p></div>';
         return;
     }
-    sel = { size: '', qty: 1 };
+    sel = { size: '', qty: 1, name: '', patches: false };
     document.title = `${p.title} — ELEVEN`;
 
     document.querySelectorAll('#club-nav a').forEach(a => {
@@ -296,6 +298,8 @@ function showProduct(id) {
                                   .join('')}</div>`
                             : ''
                     }
+                    <button class="pers-btn" data-pers-open>✎ პერსონალიზაცია</button>
+                    <p class="pers-summary" id="pers-summary" hidden></p>
                     <div class="pdp-buy">
                         <div class="pqty">
                             <button data-pqty="-1" aria-label="ერთით ნაკლები">−</button>
@@ -312,9 +316,11 @@ function showProduct(id) {
         </div>`;
 }
 
-function addToCart(id, size, qty = 1) {
-    const line = cart.find(l => l.id == id && l.size == size);
-    line ? (line.qty += qty) : cart.push({ id, size, qty });
+function addToCart(id, size, qty = 1, name = '', patches = false) {
+    const line = cart.find(
+        l => l.id == id && l.size == size && (l.name || '') === name && !!l.patches === !!patches
+    );
+    line ? (line.qty += qty) : cart.push({ id, size, qty, name, patches: !!patches });
     updateCartUI();
     const b = document.querySelector('.cart-badge');
     b.classList.add('bump');
@@ -328,8 +334,18 @@ function changeQty(i, d) {
     updateCartUI();
 }
 
+const extraOf = l => (l.name ? PERS_NAME_PRICE : 0) + (l.patches ? PERS_PATCH_PRICE : 0);
+
+const persText = l => [l.name, l.patches ? 'პაჩები და ბეიჯები' : ''].filter(Boolean).join(' · ');
+
+// p.price უკვე მოიცავს პერსონალიზაციის დანამატს, ამიტომ ჯამები ავტომატურად სწორია
 const cartDetails = () =>
-    cart.map((l, i) => ({ ...l, i, p: products.find(p => p.id == l.id) })).filter(l => l.p);
+    cart
+        .map((l, i) => {
+            const base = products.find(p => p.id == l.id);
+            return { ...l, i, p: base && { ...base, price: base.price + extraOf(l) } };
+        })
+        .filter(l => l.p);
 
 function updateCartUI() {
     const lines = cartDetails();
@@ -344,7 +360,9 @@ function updateCartUI() {
               .map(
                   l => `
         <li>
-            <span class="ci-title">${esc(l.p.title)}${l.size ? ` <small>(${esc(l.size)})</small>` : ''}</span>
+            <span class="ci-title">${esc(l.p.title)}${l.size ? ` <small>(${esc(l.size)})</small>` : ''}${
+                l.name || l.patches ? `<br><small>✎ ${esc(persText(l))}</small>` : ''
+            }</span>
             <span class="qty">
                 <button data-qty="${l.i}" data-d="-1" aria-label="ერთით ნაკლები">−</button>
                 <b>${l.qty}</b>
@@ -372,7 +390,12 @@ function checkout() {
     const msg = [
         'ახალი შეკვეთა ELEVEN-ზე:',
         '',
-        ...lines.map(l => `• ${l.p.title}${l.size ? ' (' + l.size + ')' : ''} × ${l.qty} = ${l.qty * l.p.price} ₾`),
+        ...lines.map(
+            l =>
+                `• ${l.p.title}${l.size ? ' (' + l.size + ')' : ''}${
+                    l.name ? ' [გვარი და ნომერი: ' + l.name + ']' : ''
+                }${l.patches ? ' [პაჩები და ბეიჯები]' : ''} × ${l.qty} = ${l.qty * l.p.price} ₾`
+        ),
         '',
         `სულ: ${total} ₾`,
         `სახელი: ${name}`,
@@ -380,6 +403,84 @@ function checkout() {
         `მისამართი: ${address}`
     ].join('\n');
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${enc(msg)}`, '_blank');
+}
+
+/* ===== პერსონალიზაცია ===== */
+const persClean = v => v.toUpperCase().replace(/[^A-Z0-9 ]/g, '').replace(/\s{2,}/g, ' ').slice(0, 15);
+
+function ensurePersModal() {
+    if ($('pers-modal')) return;
+    const d = document.createElement('div');
+    d.id = 'pers-modal';
+    d.className = 'pers-modal';
+    d.innerHTML = `
+        <div class="pers-box" role="dialog" aria-modal="true" aria-labelledby="pers-title">
+            <div class="pers-head">
+                <h3 id="pers-title">პერსონალიზაცია</h3>
+                <button class="close-btn" data-pers-close aria-label="დახურვა">&times;</button>
+            </div>
+            <div class="pers-row">
+                <label for="pers-name">გვარი და ნომერი (მაქს. 15 სიმბოლო)</label>
+                <span class="pers-pr">+${PERS_NAME_PRICE} ₾</span>
+            </div>
+            <input id="pers-name" type="text" maxlength="15" placeholder="მაგ. MESSI 10" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <div class="pers-hint"><span>მხოლოდ ლათინური ასოები და ციფრები</span><span><b id="pers-cnt">0</b>/15</span></div>
+            <label class="pers-opt">
+                <input type="checkbox" id="pers-patch">
+                <span class="pers-t">პაჩები და ბეიჯები</span>
+                <span class="pers-pr">+${PERS_PATCH_PRICE} ₾</span>
+            </label>
+            <div class="pers-total"><span>პერსონალიზაცია</span><strong><span id="pers-sum">0</span> ₾</strong></div>
+            <button class="checkout-btn" data-pers-ok>დადასტურება</button>
+            <button class="f-clear pers-clear" data-pers-clear>გასუფთავება</button>
+        </div>`;
+    document.body.appendChild(d);
+}
+
+function persUpdate() {
+    const input = $('pers-name');
+    const clean = persClean(input.value);
+    if (clean !== input.value) input.value = clean;
+    $('pers-cnt').textContent = clean.length;
+    $('pers-sum').textContent =
+        (clean.trim() ? PERS_NAME_PRICE : 0) + ($('pers-patch').checked ? PERS_PATCH_PRICE : 0);
+}
+
+function openPers() {
+    ensurePersModal();
+    $('pers-name').value = sel.name;
+    $('pers-patch').checked = sel.patches;
+    persUpdate();
+    $('pers-modal').classList.add('open');
+    setTimeout(() => $('pers-name').focus(), 50);
+}
+
+function closePers() {
+    const m = $('pers-modal');
+    if (m) m.classList.remove('open');
+}
+
+function renderPers() {
+    const box = $('pers-summary');
+    if (!box) return;
+    const extra = extraOf(sel);
+    const text = persText(sel);
+    box.hidden = !text;
+    box.innerHTML = text ? `✎ ${esc(text)} <b>+${extra} ₾</b>` : '';
+}
+
+function savePers() {
+    sel.name = persClean($('pers-name').value).trim();
+    sel.patches = $('pers-patch').checked;
+    renderPers();
+    closePers();
+}
+
+function clearPers() {
+    sel.name = '';
+    sel.patches = false;
+    renderPers();
+    closePers();
 }
 
 function setLeague(league) {
@@ -429,9 +530,13 @@ document.addEventListener('click', e => {
     if (t.dataset.padd) {
         const p = products.find(x => x.id == t.dataset.padd);
         if (p && p.sizes.length && !sel.size) return $('psizes').classList.add('need');
-        addToCart(t.dataset.padd, sel.size, sel.qty);
+        addToCart(t.dataset.padd, sel.size, sel.qty, sel.name, sel.patches);
         toggleCartModal();
     }
+    if (t.dataset.persOpen !== undefined) openPers();
+    if (t.dataset.persClose !== undefined || t.id === 'pers-modal') closePers();
+    if (t.dataset.persOk !== undefined) savePers();
+    if (t.dataset.persClear !== undefined) clearPers();
     if (t.dataset.qty) changeQty(Number(t.dataset.qty), Number(t.dataset.d));
     if (t.dataset.fsize) {
         f.sizes.has(t.dataset.fsize) ? f.sizes.delete(t.dataset.fsize) : f.sizes.add(t.dataset.fsize);
@@ -452,6 +557,7 @@ document.addEventListener('change', e => {
         e.target.checked ? f.types.add(e.target.dataset.type) : f.types.delete(e.target.dataset.type);
         render();
     }
+    if (e.target.id === 'pers-patch') persUpdate();
     if (e.target.id === 'sort') {
         f.sort = e.target.value;
         render();
@@ -476,8 +582,14 @@ document.addEventListener(
     true
 );
 
+document.addEventListener('input', e => {
+    if (e.target.id === 'pers-name') persUpdate();
+});
+
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && $('cart-modal').classList.contains('open')) toggleCartModal();
+    if (e.key !== 'Escape') return;
+    if ($('pers-modal') && $('pers-modal').classList.contains('open')) closePers();
+    else if ($('cart-modal').classList.contains('open')) toggleCartModal();
 });
 
 $('search').addEventListener('input', () => {
