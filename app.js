@@ -12,7 +12,7 @@ const LEAGUE_ORDER = [
     'სერია A',
     'ბუნდესლიგა',
     'სხვა ლიგები',
-    'ეროვნული ნაკრები'
+    'ეროვნული ნაკრებები'
 ];
 
 let products = [];
@@ -26,7 +26,7 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
-/** პროდუქტების შერევა გუნდების მიხედვით — რიგში სხვადასხვა კლუბი ჩანს */
+/** პროდუქტების შერევა გუნდების მიხედვით */
 function diversifyByClub(list) {
     const byClub = {};
     list.forEach(p => {
@@ -114,12 +114,7 @@ async function fetchProducts() {
             league: String(val(r, 10)).trim()
         }));
 
-        function buildLeagueNav() {
-    // ზოლი უკვე HTML-შია — მხოლოდ active კლასს ვაყენებთ
-    document.querySelectorAll('#club-nav a').forEach(a => {
-        a.classList.toggle('active', (a.dataset.league || '') === f.league);
-    });
-}
+        buildLeagueNav();
         readHash();
     } catch (e) {
         console.error('ELEVEN products load error:', e);
@@ -147,23 +142,11 @@ function readHash() {
     window.scrollTo(0, 0);
 }
 
+/** ზოლი HTML-შია — მხოლოდ active კლასს ვაყენებთ */
 function buildLeagueNav() {
-    const fromData = uniq(products.map(p => p.league));
-    const leagues = [
-        ...LEAGUE_ORDER.filter(l => fromData.includes(l)),
-        ...fromData.filter(l => !LEAGUE_ORDER.includes(l))
-    ];
-
-    $('club-nav').innerHTML =
-        '<div class="container club-list">' +
-        `<a href="#" data-league="" class="${!f.league ? 'active' : ''}">ყველა</a>` +
-        leagues
-            .map(
-                l =>
-                    `<a href="#league=${enc(l)}" data-league="${esc(l)}" class="${f.league === l ? 'active' : ''}">${esc(l)}</a>`
-            )
-            .join('') +
-        '</div>';
+    document.querySelectorAll('#club-nav a').forEach(a => {
+        a.classList.toggle('active', (a.dataset.league || '') === f.league);
+    });
 }
 
 const priceHTML = p => `${p.price} ₾ ${p.oldPrice > p.price ? `<s>${p.oldPrice} ₾</s>` : ''}`;
@@ -193,18 +176,18 @@ function render() {
         list = diversifyByClub(list);
     }
 
-document.querySelectorAll('#club-nav a').forEach(a => {
-        a.classList.toggle('active', (a.dataset.league || '') === f.league);
-    });
+    buildLeagueNav();
+
     $('hero').classList.toggle('compact', !!f.league || !!f.club);
-    
-    // ჰედერის სათაურის მართვა ფილტრების მიხედვით
-    if (f.club) {
-        $('hero-title').textContent = f.club;
-    } else if (f.league) {
-        $('hero-title').textContent = f.league;
-    } else {
-        $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
+
+    // სათაური ყოველთვის იგივე
+    $('hero-title').textContent = 'ატარე სიამაყით';
+
+    const heroSub = $('hero-sub');
+    if (heroSub) {
+        if (f.club) heroSub.textContent = [f.league, f.club].filter(Boolean).join(' · ');
+        else if (f.league) heroSub.textContent = f.league;
+        else heroSub.textContent = '';
     }
 
     const titleParts = [];
@@ -280,7 +263,7 @@ function showProduct(id) {
     const p = products.find(x => String(x.id) === String(id));
     if (!p) {
         $('product-view').innerHTML =
-            '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="#">დაბრუნდი მაღაზიაში</a></p></div>';
+            '<div class="container"><p class="loading-text">პროდუქტი ვერ მოიძებნა. <a href="/">დაბრუნდი მაღაზიაში</a></p></div>';
         return;
     }
     sel = { size: '', qty: 1 };
@@ -292,7 +275,7 @@ function showProduct(id) {
 
     const disc = p.oldPrice > p.price ? Math.round((1 - p.price / p.oldPrice) * 100) : 0;
     const sizes = [...p.sizes].sort((a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b));
-    const backHref = p.league ? `#league=${enc(p.league)}` : '#';
+    const backHref = p.league ? `#league=${enc(p.league)}` : '/';
 
     $('product-view').innerHTML = `
         <div class="container pdp">
