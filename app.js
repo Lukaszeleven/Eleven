@@ -114,7 +114,12 @@ async function fetchProducts() {
             league: String(val(r, 10)).trim()
         }));
 
-        buildLeagueNav();
+        function buildLeagueNav() {
+    // ზოლი უკვე HTML-შია — მხოლოდ active კლასს ვაყენებთ
+    document.querySelectorAll('#club-nav a').forEach(a => {
+        a.classList.toggle('active', (a.dataset.league || '') === f.league);
+    });
+}
         readHash();
     } catch (e) {
         console.error('ELEVEN products load error:', e);
