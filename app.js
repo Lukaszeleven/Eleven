@@ -407,7 +407,7 @@ function checkout() {
 
 /* ===== პერსონალიზაცია ===== */
 const persCleanName = v =>
-    v.toUpperCase().replace(/[^A-Z ]/g, '').replace(/^\s+/, '').replace(/\s{2,}/g, ' ').slice(0, 11);
+    v.toUpperCase().replace(/[^A-Z ]/g, '').replace(/^\s+/, '').replace(/\s{2,}/g, ' ').slice(0, 15);
 const persCleanNum = v => v.replace(/\D/g, '').slice(0, 2);
 
 function ensurePersModal() {
@@ -426,15 +426,13 @@ function ensurePersModal() {
                 <span class="pers-pr">+${PERS_NAME_PRICE} ₾</span>
             </div>
             <div class="pers-fields">
-                <div class="pers-f">
-                    <label for="pers-name">გვარი</label>
-                    <input id="pers-name" type="text" maxlength="11" placeholder="მაგ. MESSI" autocomplete="off" autocapitalize="characters" spellcheck="false">
-                    <div class="pers-hint"><span>ლათინური ასოები, მაქს. 11</span><span><b id="pers-cnt">0</b>/11</span></div>
+                <div class="pers-w">
+                    <input id="pers-name" type="text" maxlength="15" placeholder="მაგ: KVARATSKHELIA" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="გვარი">
+                    <span class="pers-cnt"><span id="pers-cnt">0</span>/15</span>
                 </div>
-                <div class="pers-f">
-                    <label for="pers-num">ნომერი</label>
-                    <input id="pers-num" type="text" maxlength="2" inputmode="numeric" placeholder="10" autocomplete="off">
-                    <div class="pers-hint"><span>მაქს. 2 ციფრი</span><span><b id="pers-ncnt">0</b>/2</span></div>
+                <div class="pers-w pers-w-num">
+                    <input id="pers-num" type="text" maxlength="2" inputmode="numeric" placeholder="7" autocomplete="off" aria-label="ნომერი">
+                    <span class="pers-cnt"><span id="pers-ncnt">0</span>/2</span>
                 </div>
             </div>
             <label class="pers-opt">
