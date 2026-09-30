@@ -791,6 +791,7 @@ body,
 .logo-img { height: 32px; width: auto; display: block; }
 
 .footer-content { justify-content: center; text-align: center; }
+
 /* ===== პერსონალიზაცია (ჩასვი style.css-ის ბოლოში) ===== */
 .pers-btn {
     width: 100%;
@@ -888,6 +889,10 @@ body,
 }
 .pers-box input[type="text"]:focus { outline: none; border-color: var(--pitch); box-shadow: 0 0 0 4px rgba(15, 92, 58, .12); }
 
+.pers-fields { display: grid; grid-template-columns: 1fr 140px; gap: 14px; }
+.pers-f label { display: block; margin-bottom: 6px; font-size: .88rem; font-weight: 600; }
+.pers-f:last-child input { text-align: center; }
+
 .pers-hint { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: .78rem; color: var(--muted); }
 
 .pers-opt {
@@ -909,5 +914,6 @@ body,
 
 @media (max-width: 600px) {
     .pers-modal { align-items: flex-end; padding: 0; }
+    .pers-fields { grid-template-columns: 1fr 100px; }
     .pers-box { max-width: 100%; padding: 20px 16px 26px; border-radius: 20px 20px 0 0; }
 }
