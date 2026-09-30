@@ -791,3 +791,101 @@ body,
 .logo-img { height: 32px; width: auto; display: block; }
 
 .footer-content { justify-content: center; text-align: center; }
+/* ===== პერსონალიზაცია (ჩასვი style.css-ის ბოლოში) ===== */
+.pers-btn {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 14px 24px;
+    background: var(--card);
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    font: inherit;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .25s, color .25s, transform .2s var(--ease);
+}
+.pers-btn:hover { background: var(--ink); color: var(--accent); }
+.pers-btn:active { transform: scale(.98); }
+
+.pers-summary {
+    margin: -2px 0 14px;
+    padding: 10px 16px;
+    background: var(--card);
+    border-radius: 14px;
+    font-size: .88rem;
+    font-weight: 600;
+}
+.pers-summary b { margin-left: 6px; color: var(--pitch); }
+
+.pers-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(14, 19, 16, .6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+.pers-modal.open { display: flex; }
+
+.pers-box {
+    width: 100%;
+    max-width: 420px;
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 24px;
+    background: var(--bg);
+    border-radius: 24px;
+    animation: persIn .3s var(--ease);
+}
+@keyframes persIn { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.pers-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.pers-head h3 { font-size: 1.3rem; font-weight: 800; }
+
+.pers-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 8px; font-weight: 600; font-size: .95rem; }
+.pers-pr { color: var(--pitch); font-weight: 700; font-size: .9rem; white-space: nowrap; }
+
+.pers-box input[type="text"] {
+    width: 100%;
+    padding: 13px 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1rem;
+    letter-spacing: .04em;
+}
+.pers-box input[type="text"]:focus { outline: none; border-color: var(--pitch); box-shadow: 0 0 0 4px rgba(15, 92, 58, .12); }
+
+.pers-hint { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: .78rem; color: var(--muted); }
+
+.pers-opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    cursor: pointer;
+}
+.pers-opt input { width: 18px; height: 18px; accent-color: var(--pitch); }
+.pers-t { flex: 1; font-weight: 600; font-size: .95rem; }
+
+.pers-total { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 16px; font-weight: 600; }
+.pers-total strong { font-size: 1.5rem; font-weight: 800; }
+
+.pers-clear { display: block; margin: 14px auto 0; }
+
+@media (max-width: 600px) {
+    .pers-modal { align-items: flex-end; padding: 0; }
+    .pers-box { max-width: 100%; padding: 18px 16px 24px; border-radius: 20px 20px 0 0; }
+}
