@@ -28,6 +28,87 @@ const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
+/* ===== ძებნა =====
+   ეძებს ყველგან: ID, დასახელება, კლუბი, ლიგა, ტიპი, ბეიჯი, აღწერა, ზომები, ფასი.
+   დონეები (რაც უფრო მაღალია, მით უფრო მაღლა ჩანს შედეგი):
+   4  პირდაპირი დამთხვევა (ნებისმიერ ადგილას, ერთი ასოც საკმარისია)
+   3  ფონეტიკური დამთხვევა: ქართული <-> ლათინური (ჩელს = chels, ბარსელონა = barcelona)
+   2  შეცდომით ჩაწერა (chelsa -> chelsea)
+   1  ხმოვნების გარეშე დამთხვევა (brslna -> barcelona) */
+const KA2LAT = {
+    'ა': 'a', 'ბ': 'b', 'გ': 'g', 'დ': 'd', 'ე': 'e', 'ვ': 'v', 'ზ': 'z', 'თ': 't', 'ი': 'i', 'კ': 'k',
+    'ლ': 'l', 'მ': 'm', 'ნ': 'n', 'ო': 'o', 'პ': 'p', 'ჟ': 'zh', 'რ': 'r', 'ს': 's', 'ტ': 't', 'უ': 'u',
+    'ფ': 'f', 'ქ': 'k', 'ღ': 'g', 'ყ': 'k', 'შ': 'sh', 'ჩ': 'ch', 'ც': 'ts', 'ძ': 'dz', 'წ': 'ts',
+    'ჭ': 'ch', 'ხ': 'kh', 'ჯ': 'j', 'ჰ': 'h'
+};
+
+const phon = t =>
+    t
+        .toLowerCase()
+        .replace(/[\u10D0-\u10FF]/g, c => KA2LAT[c] || '')
+        .replace(/ch/g, '#')
+        .replace(/ph/g, 'f')
+        .replace(/c(?=[eiy])/g, 's')
+        .replace(/[cq]/g, 'k')
+        .replace(/w/g, 'v')
+        .replace(/x/g, 'ks')
+        .replace(/y/g, 'i')
+        .replace(/(.)\1+/g, '$1')
+        .replace(/#/g, 'ch');
+
+const norm = t => phon(t).replace(/[^a-z0-9]+/g, ' ').trim();
+const skel = t => t.replace(/[aeiou]/g, '');
+
+function editDist(a, b) {
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+        const cur = [i];
+        for (let j = 1; j <= b.length; j++)
+            cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        prev = cur;
+    }
+    return prev[b.length];
+}
+
+function indexProduct(p) {
+    p.raw = [p.id, p.title, p.club, p.league, p.type, p.badge, p.description, p.sizes.join(' '), p.price, p.oldPrice || '']
+        .join(' ')
+        .toLowerCase();
+    p.nrm = norm(p.raw);
+    p.titleN = norm(p.title);
+    p.tokens = p.nrm.split(' ').filter(Boolean);
+    p.skels = p.tokens.map(skel);
+}
+
+function wordScore(p, w) {
+    if (p.raw.includes(w)) return 4;
+    const n = norm(w);
+    if (!n) return 0;
+    if (p.nrm.includes(n)) return 3;
+    if (n.length >= 4) {
+        const max = n.length >= 8 ? 2 : 1;
+        if (p.tokens.some(t => editDist(n, t.slice(0, n.length)) <= max)) return 2;
+    }
+    const sk = skel(n);
+    if (sk.length >= 3 && p.skels.some(s => s.includes(sk))) return 1;
+    if (sk.length === 2 && p.skels.some(s => s.startsWith(sk))) return 1;
+    return 0;
+}
+
+function matchScore(p, q) {
+    const words = q.split(/\s+/).filter(Boolean);
+    if (!words.length) return 1;
+    let total = 0;
+    for (const w of words) {
+        const sc = wordScore(p, w);
+        if (!sc) return 0;
+        total += sc;
+    }
+    const nq = norm(q);
+    if (nq && p.titleN.includes(nq)) total += 2;
+    return total;
+}
+
 function diversifyByClub(list) {
     const byClub = {};
     list.forEach(p => {
@@ -114,6 +195,8 @@ async function fetchProducts() {
             };
         });
 
+        products.forEach(indexProduct);
+
         buildLeagueNav();
         readHash();
     } catch (e) {
@@ -162,16 +245,20 @@ function render() {
     if (f.club) pool = pool.filter(p => p.club === f.club);
 
     const q = $('search').value.trim().toLowerCase();
-    let list = pool.filter(
-        p =>
-            (!f.types.size || f.types.has(p.type)) &&
-            (!f.sizes.size || p.sizes.some(s => f.sizes.has(s))) &&
-            p.title.toLowerCase().includes(q)
-    );
+    const scores = new Map();
+    let list = pool.filter(p => {
+        if (f.types.size && !f.types.has(p.type)) return false;
+        if (f.sizes.size && !p.sizes.some(s => f.sizes.has(s))) return false;
+        const sc = matchScore(p, q);
+        scores.set(p, sc);
+        return sc > 0;
+    });
 
     if (f.sort) {
         list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
-    } else if (!f.league && !f.club && !q) {
+    } else if (q) {
+        list.sort((a, b) => scores.get(b) - scores.get(a));
+    } else if (!f.league && !f.club) {
         list = diversifyByClub(list);
     }
 
@@ -626,5 +713,7 @@ $('search').addEventListener('input', () => {
 });
 
 window.addEventListener('hashchange', readHash);
+
+$('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
 fetchProducts();
