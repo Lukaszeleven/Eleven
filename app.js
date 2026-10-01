@@ -32,7 +32,8 @@ const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
    ეძებს ყველგან: ID, დასახელება, კლუბი, ლიგა, ტიპი, ბეიჯი, აღწერა, ზომები, ფასი.
    დონეები (რაც უფრო მაღალია, მით უფრო მაღლა ჩანს შედეგი):
    4  პირდაპირი დამთხვევა (ნებისმიერ ადგილას, ერთი ასოც საკმარისია)
-   3  ფონეტიკური დამთხვევა: ქართული <-> ლათინური (ჩელს = chels, ბარსელონა = barcelona)
+   3  ფონეტიკური დამთხვევა: ქართული <-> ლათინური (ბარ = bar -> Barcelona)
+   ---- ქვემოთა "სუსტი" დონეები ირთვება მხოლოდ მაშინ, თუ 3-4 დონეზე არაფერი მოიძებნა ----
    2  შეცდომით ჩაწერა (chelsa -> chelsea)
    1  ხმოვნების გარეშე დამთხვევა (brslna -> barcelona) */
 const KA2LAT = {
@@ -80,27 +81,27 @@ function indexProduct(p) {
     p.skels = p.tokens.map(skel);
 }
 
-function wordScore(p, w) {
+function wordScore(p, w, weak = false) {
     if (p.raw.includes(w)) return 4;
     const n = norm(w);
     if (!n) return 0;
     if (p.nrm.includes(n)) return 3;
-    if (n.length >= 4) {
-        const max = n.length >= 8 ? 2 : 1;
+    if (!weak) return 0;
+    if (n.length >= 5) {
+        const max = n.length >= 9 ? 2 : 1;
         if (p.tokens.some(t => editDist(n, t.slice(0, n.length)) <= max)) return 2;
     }
     const sk = skel(n);
-    if (sk.length >= 3 && p.skels.some(s => s.includes(sk))) return 1;
-    if (sk.length === 2 && p.skels.some(s => s.startsWith(sk))) return 1;
+    if (n.length >= 5 && sk.length >= 3 && p.skels.some(s => s.includes(sk))) return 1;
     return 0;
 }
 
-function matchScore(p, q) {
+function matchScore(p, q, weak = false) {
     const words = q.split(/\s+/).filter(Boolean);
     if (!words.length) return 1;
     let total = 0;
     for (const w of words) {
-        const sc = wordScore(p, w);
+        const sc = wordScore(p, w, weak);
         if (!sc) return 0;
         total += sc;
     }
@@ -245,14 +246,21 @@ function render() {
     if (f.club) pool = pool.filter(p => p.club === f.club);
 
     const q = $('search').value.trim().toLowerCase();
+    const base = pool.filter(
+        p => (!f.types.size || f.types.has(p.type)) && (!f.sizes.size || p.sizes.some(s => f.sizes.has(s)))
+    );
     const scores = new Map();
-    let list = pool.filter(p => {
-        if (f.types.size && !f.types.has(p.type)) return false;
-        if (f.sizes.size && !p.sizes.some(s => f.sizes.has(s))) return false;
-        const sc = matchScore(p, q);
-        scores.set(p, sc);
-        return sc > 0;
-    });
+    const run = weak => {
+        scores.clear();
+        return base.filter(p => {
+            const sc = matchScore(p, q, weak);
+            scores.set(p, sc);
+            return sc > 0;
+        });
+    };
+    // ჯერ მხოლოდ ზუსტი/ფონეტიკური დამთხვევა; თუ არაფერი ჩანს, ირთვება შეცდომების ამოცნობა
+    let list = run(false);
+    if (!list.length && q) list = run(true);
 
     if (f.sort) {
         list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
