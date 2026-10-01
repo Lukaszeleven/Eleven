@@ -948,3 +948,52 @@ body,
     .pers-cnt { right: 14px; }
     .pers-w-num .pers-cnt { right: 8px; }
 }
+
+
+/* ===== პროდუქტის ფოტო-გალერეა (ჩასვი style.css-ის ბოლოში) ===== */
+.pdp-gallery { position: sticky; top: 130px; }
+.pdp-gallery .pdp-img { position: relative !important; top: auto; }
+
+.pdp-thumbs { display: flex; gap: 10px; margin-top: 12px; }
+.pdp-thumbs:empty { display: none; }
+.pdp-thumbs button {
+    width: 76px;
+    height: 76px;
+    padding: 6px;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    background: var(--card);
+    cursor: pointer;
+    transition: border-color .2s;
+}
+.pdp-thumbs button:hover { border-color: var(--line); }
+.pdp-thumbs button.on { border-color: var(--ink); }
+.pdp-thumbs img { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+.gal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .14);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .2s;
+}
+.gal-nav:hover { background: var(--accent); }
+.gal-nav.prev { left: 12px; }
+.gal-nav.next { right: 12px; }
+
+@media (max-width: 900px) {
+    .pdp-gallery { position: static; }
+    .pdp-thumbs button { width: 60px; height: 60px; border-radius: 12px; }
+    .gal-nav { width: 36px; height: 36px; font-size: 1.4rem; }
+    .gal-nav.prev { left: 8px; }
+    .gal-nav.next { right: 8px; }
+}
