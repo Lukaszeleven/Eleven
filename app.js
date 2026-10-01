@@ -378,7 +378,10 @@ function showProduct(id) {
         <div class="container pdp">
             <a class="back" href="${backHref}">← ${esc(p.league || p.club || 'მაღაზია')}</a>
             <div class="pdp-grid">
-                <div class="pdp-img"><img src="${imgUrl(p.id)}" alt="${esc(p.title)}" data-fallback data-pid="${esc(p.id)}"></div>
+                <div class="pdp-gallery">
+                    <div class="pdp-img"><img id="pdp-main" src="${imgUrl(p.id)}" alt="${esc(p.title)}" data-fallback data-pid="${esc(p.id)}"></div>
+                    <div class="pdp-thumbs" id="pdp-thumbs"></div>
+                </div>
                 <div class="pdp-info">
                     <div class="pdp-tags">${disc ? `<span class="tag sale">-${disc}%</span>` : ''}${
                         p.badge ? `<span class="tag">${esc(p.badge)}</span>` : ''
@@ -409,6 +412,58 @@ function showProduct(id) {
                 </div>
             </div>
         </div>`;
+    gal = { urls: [], i: 0 };
+    loadGallery(p.id);
+}
+
+/* ===== გალერეა: images/{ID}.jpg, images/{ID}-2.jpg, images/{ID}-3.jpg ... ===== */
+let gal = { urls: [], i: 0 };
+
+function probeImage(name) {
+    return new Promise(resolve => {
+        let n = 0;
+        const next = () => {
+            if (n >= IMG_EXTS.length) return resolve(null);
+            const url = `images/${name}.${IMG_EXTS[n++]}`;
+            const im = new Image();
+            im.onload = () => resolve(url);
+            im.onerror = next;
+            im.src = url;
+        };
+        next();
+    });
+}
+
+async function loadGallery(id) {
+    const base = enc(String(id).trim());
+    const urls = [];
+    const first = await probeImage(base);
+    if (first) urls.push(first);
+    for (let n = 2; n <= 8; n++) {
+        const u = await probeImage(`${base}-${n}`);
+        if (!u) break;
+        urls.push(u);
+    }
+    const main = $('pdp-main');
+    if (urls.length < 2 || !main || main.dataset.pid !== String(id)) return; // სხვა პროდუქტზე გადავიდა
+    gal = { urls, i: 0 };
+    $('pdp-thumbs').innerHTML = urls
+        .map(
+            (u, k) =>
+                `<button class="${k ? '' : 'on'}" data-thumb="${k}" aria-label="ფოტო ${k + 1}"><img src="${u}" alt=""></button>`
+        )
+        .join('');
+    main.closest('.pdp-img').insertAdjacentHTML(
+        'beforeend',
+        '<button class="gal-nav prev" data-gal="-1" aria-label="წინა ფოტო">‹</button><button class="gal-nav next" data-gal="1" aria-label="შემდეგი ფოტო">›</button>'
+    );
+}
+
+function showPhoto(i) {
+    if (gal.urls.length < 2) return;
+    gal.i = (i + gal.urls.length) % gal.urls.length;
+    $('pdp-main').src = gal.urls[gal.i];
+    document.querySelectorAll('#pdp-thumbs button').forEach((b, k) => b.classList.toggle('on', k === gal.i));
 }
 
 function addToCart(id, size, qty = 1, name = '', num = '', patches = false) {
@@ -660,6 +715,10 @@ document.addEventListener('click', e => {
     if (t.dataset.persClose !== undefined || t.id === 'pers-modal') closePers();
     if (t.dataset.persOk !== undefined) savePers();
     if (t.dataset.persClear !== undefined) clearPers();
+
+    const th = t.closest && t.closest('[data-thumb]');
+    if (th) showPhoto(Number(th.dataset.thumb));
+    if (t.dataset.gal) showPhoto(gal.i + Number(t.dataset.gal));
     if (t.dataset.qty) changeQty(Number(t.dataset.qty), Number(t.dataset.d));
     if (t.dataset.fsize) {
         f.sizes.has(t.dataset.fsize) ? f.sizes.delete(t.dataset.fsize) : f.sizes.add(t.dataset.fsize);
@@ -703,6 +762,26 @@ document.addEventListener(
         }
     },
     true
+);
+
+// სვაიპი მობილურზე: ფოტოზე თითის გადაწევა
+let touchX = null;
+document.addEventListener(
+    'touchstart',
+    e => {
+        touchX = e.target.closest && e.target.closest('.pdp-img') ? e.touches[0].clientX : null;
+    },
+    { passive: true }
+);
+document.addEventListener(
+    'touchend',
+    e => {
+        if (touchX === null || gal.urls.length < 2) return;
+        const dx = e.changedTouches[0].clientX - touchX;
+        touchX = null;
+        if (Math.abs(dx) > 40) showPhoto(gal.i + (dx < 0 ? 1 : -1));
+    },
+    { passive: true }
 );
 
 document.addEventListener('input', e => {
