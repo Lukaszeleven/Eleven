@@ -22,6 +22,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    padding-top: var(--header-h, 122px);
 }
 
 .container { width: 90%; max-width: 1240px; margin: 0 auto; }
@@ -31,8 +32,10 @@ body {
 
 /* ===== Navbar ===== */
 .navbar {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
     background: var(--ink);
     color: #fff;
@@ -202,12 +205,9 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    position: sticky;
-    top: var(--header-h, 120px);
-    z-index: 40;
+    padding: 8px 0 16px;
+    margin-bottom: 8px;
     background: var(--bg);
-    padding: 16px 0 12px;
-    margin-bottom: 16px;
 }
 
 .section-title { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; letter-spacing: -.02em; }
@@ -244,15 +244,76 @@ body {
 .shop { display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
 
 .filters {
-    position: sticky;
-    top: calc(var(--header-h, 120px) + 72px);
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: calc(100vh - var(--header-h, 120px) - 96px);
+    padding-bottom: 8px;
+}
+
+/* ===== გაყინული მდგომარეობა (hero გადავიდა) ===== */
+body.is-pinned .toolbar {
+    position: fixed;
+    top: var(--header-h, 122px);
+    left: 0;
+    right: 0;
+    z-index: 90;
+    margin: 0;
+    padding: 14px 0 12px;
+    background: var(--bg);
+    box-shadow: 0 1px 0 var(--line);
+}
+body.is-pinned .toolbar .section-title,
+body.is-pinned .toolbar-right {
+    /* container-ის სიგანე შენარჩუნებულია მშობელთან */
+}
+body.is-pinned .toolbar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--bg);
+    z-index: -1;
+}
+body.is-pinned #shop > .toolbar {
+    width: 100%;
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 5%;
+    padding-right: 5%;
+    box-sizing: border-box;
+}
+@media (min-width: 1378px) {
+    body.is-pinned #shop > .toolbar {
+        padding-left: calc((100% - 1240px) / 2);
+        padding-right: calc((100% - 1240px) / 2);
+        max-width: none;
+    }
+}
+
+body.is-pinned .filters {
+    position: fixed;
+    top: calc(var(--header-h, 122px) + var(--toolbar-h, 56px));
+    z-index: 80;
+    width: 240px;
+    max-height: calc(100vh - var(--header-h, 122px) - var(--toolbar-h, 56px) - 24px);
     overflow-y: auto;
     scrollbar-width: thin;
-    padding-bottom: 8px;
+    background: var(--bg);
+}
+
+body.is-pinned .shop {
+    /* ადგილი fixed toolbar-ისთვის + filters სვეტი რჩება */
+    padding-top: var(--toolbar-h, 56px);
+}
+
+body.is-pinned .shop .filters {
+    /* filters fixed — grid-ში placeholder სიგანე */
+}
+body.is-pinned #products-container {
+    /* პროდუქტები ჩვეულებრივ სქროლდება */
 }
 
 .f-group {
@@ -583,6 +644,22 @@ footer .logo { font-size: 1.2rem; }
 }
 
 @media (max-width: 900px) {
+    body.is-pinned .toolbar {
+        position: static !important;
+        box-shadow: none !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    body.is-pinned .filters {
+        position: static !important;
+        left: auto !important;
+        width: auto !important;
+        max-height: none !important;
+    }
+    body.is-pinned .shop {
+        padding-top: 0 !important;
+    }
+
     .shop {
         grid-template-columns: 1fr !important;
         gap: 16px;
