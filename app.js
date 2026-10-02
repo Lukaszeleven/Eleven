@@ -859,14 +859,19 @@ window.addEventListener('hashchange', readHash);
 
 $('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
-/* sticky-სთვის header-ის სიმაღლე */
+/* sticky-სთვის header-ის სიმაღლე (მუქი ნავი + ლიგების ზოლი) */
 function syncHeaderH() {
     const nav = document.querySelector('.navbar');
     if (!nav) return;
-    document.documentElement.style.setProperty('--header-h', nav.offsetHeight + 'px');
+    /* +1px რომ კონტენტი ზოლის ქვეშ არ გამოჩნდეს */
+    document.documentElement.style.setProperty('--header-h', nav.offsetHeight + 1 + 'px');
 }
 syncHeaderH();
 window.addEventListener('resize', syncHeaderH);
 window.addEventListener('load', syncHeaderH);
+/* ფონტების ჩატვირთვის შემდეგ სიმაღლე შეიძლება შეიცვალოს */
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(syncHeaderH);
+}
 
 fetchProducts();
