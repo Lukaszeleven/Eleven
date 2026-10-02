@@ -193,7 +193,12 @@ body {
     font: inherit;
     font-size: .9rem;
     cursor: pointer;
+    transition: border-color .2s;
 }
+/* შემოსაზღვრა მხოლოდ მაუსის მიტანისას, დაჭერის შემდეგ მუდმივად არ რჩება */
+#sort:focus,
+#sort:focus-visible { outline: none; }
+#sort:hover { border-color: var(--ink); }
 
 .filter-toggle {
     display: none;
@@ -453,6 +458,21 @@ body {
 }
 .checkout-btn:hover { background: var(--ink); color: var(--accent); }
 .checkout-btn:active { transform: scale(.98); }
+
+.cart-clear {
+    display: block;
+    margin: 14px auto 0;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: .85rem;
+    color: var(--muted);
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color .2s;
+}
+.cart-clear:hover { color: #e5322d; }
+.cart-clear[data-armed] { color: #e5322d; font-weight: 600; }
 
 /* ===== Footer ===== */
 footer { margin-top: auto; background: var(--ink); color: #8a948d; padding: 32px 0; font-size: .85rem; }
