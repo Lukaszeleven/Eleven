@@ -19,7 +19,8 @@ let cart = JSON.parse(localStorage.getItem('eleven-cart-v2') || '[]');
 const PERS_NAME_PRICE = 15;
 const PERS_PATCH_PRICE = 10;
 let sel = { size: '', qty: 1, name: '', num: '', patches: false };
-const f = { league: '', club: '', types: new Set(), sizes: new Set(), sort: '' };
+const NAT_LEAGUE = 'ეროვნული ნაკრები';
+const f = { league: '', clubs: new Set(), types: new Set(), sizes: new Set(), sort: '' };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -214,7 +215,14 @@ function readHash() {
     const cm = location.hash.match(/club=([^&]*)/);
 
     f.league = lm ? decodeURIComponent(lm[1]) : '';
-    f.club = cm ? decodeURIComponent(cm[1]) : '';
+    f.clubs.clear();
+    if (cm) {
+        decodeURIComponent(cm[1])
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean)
+            .forEach(c => f.clubs.add(c));
+    }
 
     if (pm) showProduct(decodeURIComponent(pm[1]));
     else {
@@ -242,7 +250,7 @@ function showShop() {
 
 function render() {
     let pool = products.filter(p => !f.league || p.league === f.league);
-    if (f.club) pool = pool.filter(p => p.club === f.club);
+    if (f.clubs.size) pool = pool.filter(p => f.clubs.has(p.club));
 
     const q = $('search').value.trim().toLowerCase();
     const base = pool.filter(
@@ -265,15 +273,15 @@ function render() {
         list.sort((a, b) => (f.sort === 'asc' ? a.price - b.price : b.price - a.price));
     } else if (q) {
         list.sort((a, b) => scores.get(b) - scores.get(a));
-    } else if (!f.league && !f.club) {
+    } else if (!f.league && !f.clubs.size) {
         list = diversifyByClub(list);
     }
 
     buildLeagueNav();
 
-    $('hero').classList.toggle('compact', !!f.league || !!f.club);
+    $('hero').classList.toggle('compact', !!f.league || !!f.clubs.size);
 
-    if (f.league || f.club) {
+    if (f.league || f.clubs.size) {
         $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
     } else {
         $('hero-title').innerHTML = 'ᲡᲐᲣᲙᲔᲗᲔᲡᲝ<br>ᲝᲜᲚᲐᲘᲜ ᲛᲐᲦᲐᲖᲘᲐ<br>ᲡᲐᲥᲐᲠᲗᲕᲔᲚᲝᲨᲘ';
@@ -281,20 +289,23 @@ function render() {
 
     const heroSub = $('hero-sub');
     if (heroSub) {
-        if (f.club) heroSub.textContent = [f.league, f.club].filter(Boolean).join(' · ');
+        if (f.clubs.size === 1) heroSub.textContent = [f.league, [...f.clubs][0]].filter(Boolean).join(' · ');
+        else if (f.clubs.size > 1) heroSub.textContent = [f.league, f.clubs.size + ' გუნდი'].filter(Boolean).join(' · ');
         else if (f.league) heroSub.textContent = f.league;
         else heroSub.textContent = '';
     }
 
     const titleParts = [];
     if (f.league) titleParts.push(f.league);
-    if (f.club) titleParts.push(f.club);
+    if (f.clubs.size === 1) titleParts.push([...f.clubs][0]);
+    else if (f.clubs.size > 1) titleParts.push(f.clubs.size + ' გუნდი');
     $('result-count').textContent = `${titleParts.length ? titleParts.join(' · ') : 'ყველა პროდუქტი'} (${list.length})`;
 
-    const clubsInScope = uniq(
-        products.filter(p => !f.league || p.league === f.league).map(p => p.club)
-    ).sort();
-    const types = uniq(pool.map(p => p.type));
+    const scopeProducts = products.filter(p => !f.league || p.league === f.league);
+    const kaSort = (a, b) => a.localeCompare(b, 'ka');
+    const teamClubs = uniq(scopeProducts.filter(p => p.league !== NAT_LEAGUE).map(p => p.club)).sort(kaSort);
+    const nationClubs = uniq(scopeProducts.filter(p => p.league === NAT_LEAGUE).map(p => p.club)).sort(kaSort);
+    const types = uniq(pool.map(p => p.type)).sort(kaSort);
     const sizes = uniq(pool.flatMap(p => p.sizes)).sort(
         (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)
     );
@@ -318,15 +329,24 @@ function render() {
 
     let filtersHTML = '';
 
-    if (clubsInScope.length) {
-        const body =
-            `<div class="chips">` +
-            `<button data-fclub="" class="${!f.club ? 'on' : ''}">ყველა</button>` +
-            clubsInScope
-                .map(c => `<button data-fclub="${esc(c)}" class="${f.club === c ? 'on' : ''}">${esc(c)}</button>`)
-                .join('') +
-            `</div>`;
-        filtersHTML += fSection('club', 'გუნდი', f.club ? 1 : 0, body);
+    const clubChecks = list =>
+        list
+            .map(
+                c =>
+                    `<label><input type="checkbox" data-club="${esc(c)}" ${
+                        f.clubs.has(c) ? 'checked' : ''
+                    }> ${esc(c)}</label>`
+            )
+            .join('');
+
+    const selectedIn = list => list.filter(c => f.clubs.has(c)).length;
+
+    if (teamClubs.length && f.league !== NAT_LEAGUE) {
+        filtersHTML += fSection('club', 'გუნდი', selectedIn(teamClubs), clubChecks(teamClubs));
+    }
+
+    if (nationClubs.length && (!f.league || f.league === NAT_LEAGUE)) {
+        filtersHTML += fSection('nation', 'ნაკრები', selectedIn(nationClubs), clubChecks(nationClubs));
     }
 
     if (types.length) {
@@ -351,7 +371,7 @@ function render() {
         filtersHTML += fSection('size', 'ზომა', f.sizes.size, body);
     }
 
-    if (f.club || f.types.size || f.sizes.size) {
+    if (f.clubs.size || f.types.size || f.sizes.size) {
         filtersHTML += '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
     }
     $('filters').innerHTML = filtersHTML;
@@ -670,20 +690,23 @@ function clearPers() {
 
 function setLeague(league) {
     f.league = league || '';
-    f.club = '';
+    f.clubs.clear();
     f.types.clear();
     f.sizes.clear();
     if (f.league) location.hash = 'league=' + enc(f.league);
     else location.hash = '';
 }
 
-function setClub(club) {
-    f.club = club || '';
-    if (f.league && f.club) location.hash = `league=${enc(f.league)}&club=${enc(f.club)}`;
-    else if (f.league) location.hash = 'league=' + enc(f.league);
-    else if (f.club) location.hash = 'club=' + enc(f.club);
-    else location.hash = '';
-    render();
+function syncClubHash() {
+    const base = f.league ? 'league=' + enc(f.league) : '';
+    if (f.clubs.size === 1) {
+        const c = enc([...f.clubs][0]);
+        location.hash = base ? `${base}&club=${c}` : `club=${c}`;
+    } else if (f.league) {
+        location.hash = base;
+    } else {
+        location.hash = '';
+    }
 }
 
 document.addEventListener('click', e => {
@@ -695,7 +718,7 @@ document.addEventListener('click', e => {
         return;
     }
 
-        const ft = t.closest && t.closest('[data-ftoggle]');
+    const ft = t.closest && t.closest('[data-ftoggle]');
     if (ft) {
         const g = ft.closest('.f-group');
         if (g) {
@@ -705,9 +728,8 @@ document.addEventListener('click', e => {
         return;
     }
 
-    if (t.dataset.fclub !== undefined) {
-        setClub(t.dataset.fclub);
-        return;
+    if (t.dataset.club !== undefined || (t.closest && t.closest('[data-club]'))) {
+        return; // handled by change event
     }
 
     if (t.dataset.psize) {
@@ -745,7 +767,8 @@ document.addEventListener('click', e => {
     if (t.dataset.clear !== undefined) {
         f.types.clear();
         f.sizes.clear();
-        f.club = '';
+        f.clubs.clear();
+        syncClubHash();
         render();
     }
     if (t.id === 'cart-modal') toggleCartModal();
@@ -753,6 +776,12 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('change', e => {
+    if (e.target.dataset.club !== undefined) {
+        e.target.checked ? f.clubs.add(e.target.dataset.club) : f.clubs.delete(e.target.dataset.club);
+        syncClubHash();
+        render();
+        return;
+    }
     if (e.target.dataset.type) {
         e.target.checked ? f.types.add(e.target.dataset.type) : f.types.delete(e.target.dataset.type);
         render();
@@ -835,9 +864,10 @@ window.addEventListener('hashchange', readHash);
         }
     };
     f.league = dec(h.match(/league=([^&]*)/));
-    f.club = dec(h.match(/club=([^&]*)/));
+    const clubHash = dec(h.match(/club=([^&]*)/));
+    if (clubHash) clubHash.split(',').map(s => s.trim()).filter(Boolean).forEach(c => f.clubs.add(c));
     buildLeagueNav();
-    if (f.league || f.club) {
+    if (f.league || f.clubs.size) {
         $('hero').classList.add('compact');
         $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
     }
