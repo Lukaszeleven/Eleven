@@ -73,20 +73,46 @@ body {
 .navbar #search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(3, 243, 194, .15); }
 
 .cart-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform .25s var(--ease), background .2s;
+}
+.cart-badge:hover { background: rgba(255, 255, 255, .1); transform: translateY(-1px); }
+.cart-badge.bump { transform: scale(1.12); }
+
+.cart-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.cart-count-badge {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
     background: var(--accent);
     color: var(--ink);
-    font: inherit;
-    font-size: .9rem;
-    font-weight: 600;
-    padding: 9px 18px;
-    border: none;
+    font-family: var(--font, inherit);
+    font-size: .68rem;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
     border-radius: 999px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: transform .25s var(--ease);
+    pointer-events: none;
 }
-.cart-badge:hover { transform: translateY(-2px); }
-.cart-badge.bump { transform: scale(1.1); }
 
 /* ===== League navigation ===== */
 .club-nav {
@@ -448,7 +474,7 @@ body {
 .checkout-btn:hover { background: var(--ink); color: var(--accent); }
 .checkout-btn:active { transform: scale(.98); }
 
-.cart-clear[data-armed], .cart-clear[data-armed]:hover { background: #e5322d; color: #fff; }
+/* cart clear is immediate — no armed state */
 
 /* ===== Footer ===== */
 footer { margin-top: auto; background: var(--ink); color: #8a948d; padding: 32px 0; font-size: .85rem; }
@@ -580,13 +606,24 @@ footer .logo { font-size: 1.2rem; }
 
     .cart-badge {
         grid-area: cart;
-        padding: 8px 12px;
-        font-size: 0.82rem;
+        width: 40px;
+        height: 40px;
         justify-self: end;
     }
 
-    .cart-label {
-        display: none !important;
+    .cart-icon {
+        width: 22px;
+        height: 22px;
+    }
+
+    .cart-count-badge {
+        top: 0;
+        right: -2px;
+        min-width: 16px;
+        height: 16px;
+        font-size: .62rem;
+        line-height: 16px;
+        padding: 0 4px;
     }
 
     /* --- League bar --- */
