@@ -695,6 +695,16 @@ document.addEventListener('click', e => {
         return;
     }
 
+        const ft = t.closest && t.closest('[data-ftoggle]');
+    if (ft) {
+        const g = ft.closest('.f-group');
+        if (g) {
+            g.classList.toggle('open');
+            ft.setAttribute('aria-expanded', g.classList.contains('open'));
+        }
+        return;
+    }
+
     if (t.dataset.fclub !== undefined) {
         setClub(t.dataset.fclub);
         return;
