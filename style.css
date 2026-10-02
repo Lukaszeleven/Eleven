@@ -81,7 +81,7 @@ body {
     height: 44px;
     padding: 0;
     background: transparent;
-    color: #fff;
+    color: var(--accent);
     border: none;
     border-radius: 50%;
     cursor: pointer;
