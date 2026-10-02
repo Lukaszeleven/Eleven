@@ -397,11 +397,16 @@ function render() {
               )
               .join('')
         : '<p class="loading-text">ამ პარამეტრებით პროდუქტი ვერ მოიძებნა.</p>';
+
+    if (typeof updatePin === 'function') updatePin();
 }
 
 function showProduct(id) {
     $('shop-view').hidden = true;
     $('product-view').hidden = false;
+    document.body.classList.remove('is-pinned');
+    const fl = $('filters');
+    if (fl) fl.style.left = '';
     const p = products.find(x => String(x.id) === String(id));
     if (!p) {
         $('product-view').innerHTML =
@@ -859,19 +864,47 @@ window.addEventListener('hashchange', readHash);
 
 $('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
-/* sticky-სთვის header-ის სიმაღლე (მუქი ნავი + ლიგების ზოლი) */
+/* fixed header + pin როცა hero გაქრება */
 function syncHeaderH() {
     const nav = document.querySelector('.navbar');
     if (!nav) return;
-    /* +1px რომ კონტენტი ზოლის ქვეშ არ გამოჩნდეს */
-    document.documentElement.style.setProperty('--header-h', nav.offsetHeight + 1 + 'px');
+    document.documentElement.style.setProperty('--header-h', nav.offsetHeight + 'px');
 }
+
+function updatePin() {
+    syncHeaderH();
+    const hero = $('hero');
+    const shopView = $('shop-view');
+    if (!hero || !shopView || shopView.hidden) {
+        document.body.classList.remove('is-pinned');
+        const filters = $('filters');
+        if (filters) filters.style.left = '';
+        return;
+    }
+    const headerH = document.querySelector('.navbar')?.offsetHeight || 122;
+    const pinned = hero.getBoundingClientRect().bottom <= headerH + 1;
+    document.body.classList.toggle('is-pinned', pinned);
+    if (pinned) {
+        const tb = document.querySelector('#shop .toolbar');
+        if (tb) document.documentElement.style.setProperty('--toolbar-h', tb.offsetHeight + 'px');
+        const shop = document.querySelector('#shop .shop');
+        const filters = $('filters');
+        if (shop && filters) {
+            filters.style.left = shop.getBoundingClientRect().left + 'px';
+        }
+    } else {
+        const filters = $('filters');
+        if (filters) filters.style.left = '';
+    }
+}
+
 syncHeaderH();
-window.addEventListener('resize', syncHeaderH);
-window.addEventListener('load', syncHeaderH);
-/* ფონტების ჩატვირთვის შემდეგ სიმაღლე შეიძლება შეიცვალოს */
+updatePin();
+window.addEventListener('scroll', updatePin, { passive: true });
+window.addEventListener('resize', updatePin);
+window.addEventListener('load', updatePin);
 if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(syncHeaderH);
+    document.fonts.ready.then(updatePin);
 }
 
 fetchProducts();
