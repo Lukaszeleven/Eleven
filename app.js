@@ -26,6 +26,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const enc = encodeURIComponent;
 const uniq = a => [...new Set(a)].filter(Boolean);
+// ქართული მთავრული: მხედრული (U+10D0..) -> მთავრული (U+1C90..). CSS text-transform ქართულზე ბევრ ბრაუზერში არ მუშაობს.
+const upGeo = t => t.replace(/[\u10D0-\u10FA\u10FD-\u10FF]/g, c => String.fromCharCode(c.charCodeAt(0) + 0xbc0));
 const num = v => Number(String(v).replace(/[^0-9.]/g, '')) || 0;
 
 /* ===== ძებნა =====
@@ -275,9 +277,9 @@ function render() {
     $('hero').classList.toggle('compact', !!f.league || !!f.club);
 
     if (f.league || f.club) {
-        $('hero-title').textContent = 'ატარე სიამაყით';
+        $('hero-title').textContent = upGeo('ატარე სიამაყით');
     } else {
-        $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
+        $('hero-title').innerHTML = upGeo('საუკეთესო') + '<br>' + upGeo('ონლაინ მაღაზია') + '<br>' + upGeo('საქართველოში');
     }
 
     const heroSub = $('hero-sub');
@@ -800,6 +802,12 @@ $('search').addEventListener('input', () => {
 });
 
 window.addEventListener('hashchange', readHash);
+
+// მენიუს და მთავარი ტექსტის თავიდანვე გადაყვანა მთავრულზე
+document.querySelectorAll('#club-nav a').forEach(a => {
+    a.textContent = upGeo(a.textContent.replace(/\s+/g, ' ').trim());
+});
+$('hero-title').innerHTML = upGeo($('hero-title').innerHTML);
 
 $('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
