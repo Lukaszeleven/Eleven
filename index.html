@@ -18,7 +18,11 @@
             <a href="/" class="logo"><img src="logo.png" alt="" class="logo-img">ELEVEN SPORTS</a>
             <input id="search" type="search" placeholder="მოძებნე პროდუქტი..." aria-label="ძებნა">
             <button class="cart-badge" onclick="toggleCartModal()" aria-label="კალათის გახსნა">
-                🛒 <span class="cart-label">კალათა:</span> <strong id="cart-count">0</strong> (<span id="cart-total">0</span> ₾)
+                <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M6 8h12l-1.2 11.2a1.6 1.6 0 0 1-1.6 1.4H8.8a1.6 1.6 0 0 1-1.6-1.4L6 8z"/>
+                    <path d="M9 8V6.5A3 3 0 0 1 12 3.5a3 3 0 0 1 3 3V8"/>
+                </svg>
+                <span id="cart-count" class="cart-count-badge" hidden>0</span>
             </button>
         </div>
         <nav class="club-nav" id="club-nav" aria-label="ლიგები">
