@@ -277,7 +277,7 @@ function render() {
     if (f.league || f.club) {
         $('hero-title').textContent = 'ატარე სიამაყით';
     } else {
-        $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
+        $('hero-title').innerHTML = 'ᲡᲐᲣᲙᲔᲗᲔᲡᲝ<br>ᲝᲜᲚᲐᲘᲜ ᲛᲐᲦᲐᲖᲘᲐ<br>ᲡᲐᲥᲐᲠᲗᲕᲔᲚᲝᲨᲘ';
     }
 
     const heroSub = $('hero-sub');
