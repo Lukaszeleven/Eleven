@@ -801,6 +801,30 @@ $('search').addEventListener('input', () => {
 
 window.addEventListener('hashchange', readHash);
 
+// გვერდის განახლებისას ტექსტი მაშინვე სწორი იყოს, პროდუქტების ჩატვირთვამდე
+(function initFromHash() {
+    const h = location.hash;
+    if (/product=/.test(h)) {
+        $('shop-view').hidden = true;
+        $('product-view').hidden = false;
+        return;
+    }
+    const dec = m => {
+        try {
+            return m ? decodeURIComponent(m[1]) : '';
+        } catch (_) {
+            return '';
+        }
+    };
+    f.league = dec(h.match(/league=([^&]*)/));
+    f.club = dec(h.match(/club=([^&]*)/));
+    buildLeagueNav();
+    if (f.league || f.club) {
+        $('hero').classList.add('compact');
+        $('hero-title').textContent = 'ატარე სიამაყით';
+    }
+})();
+
 $('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
 fetchProducts();
