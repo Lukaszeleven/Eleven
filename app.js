@@ -275,9 +275,9 @@ function render() {
     $('hero').classList.toggle('compact', !!f.league || !!f.club);
 
     if (f.league || f.club) {
-        $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
+        $('hero-title').textContent = 'ატარე სიამაყით';
     } else {
-        $('hero-title').innerHTML = 'ᲡᲐᲣᲙᲔᲗᲔᲡᲝ<br>ᲝᲜᲚᲐᲘᲜ ᲛᲐᲦᲐᲖᲘᲐ<br>ᲡᲐᲥᲐᲠᲗᲕᲔᲚᲝᲨᲘ';
+        $('hero-title').innerHTML = 'საუკეთესო<br>ონლაინ მაღაზია<br>საქართველოში';
     }
 
     const heroSub = $('hero-sub');
@@ -505,6 +505,8 @@ function updateCartUI() {
     $('cart-count').textContent = count;
     $('cart-total').textContent = total;
     $('modal-cart-total').textContent = total;
+    const cc = document.querySelector('[data-cart-clear]');
+    if (cc) cc.hidden = !cart.length;
     $('cart-items-list').innerHTML = lines.length
         ? lines
               .map(
@@ -527,6 +529,26 @@ function updateCartUI() {
 
 function toggleCartModal() {
     $('cart-modal').classList.toggle('open');
+}
+
+// კალათის გასუფთავება: პირველი დაჭერა ამოწმებს, მეორე (3 წამში) ასუფთავებს
+let clearTimer;
+const CLEAR_LABEL = 'კალათის გასუფთავება';
+function cartClearClick(btn) {
+    clearTimeout(clearTimer);
+    if (btn.dataset.armed) {
+        delete btn.dataset.armed;
+        btn.textContent = CLEAR_LABEL;
+        cart = [];
+        updateCartUI();
+        return;
+    }
+    btn.dataset.armed = '1';
+    btn.textContent = 'დააჭირე თავიდან დასადასტურებლად';
+    clearTimer = setTimeout(() => {
+        delete btn.dataset.armed;
+        btn.textContent = CLEAR_LABEL;
+    }, 3000);
 }
 
 function checkout() {
@@ -720,6 +742,7 @@ document.addEventListener('click', e => {
     if (th) showPhoto(Number(th.dataset.thumb));
     if (t.dataset.gal) showPhoto(gal.i + Number(t.dataset.gal));
     if (t.dataset.qty) changeQty(Number(t.dataset.qty), Number(t.dataset.d));
+    if (t.dataset.cartClear !== undefined) cartClearClick(t);
     if (t.dataset.fsize) {
         f.sizes.has(t.dataset.fsize) ? f.sizes.delete(t.dataset.fsize) : f.sizes.add(t.dataset.fsize);
         render();
@@ -821,9 +844,14 @@ window.addEventListener('hashchange', readHash);
     buildLeagueNav();
     if (f.league || f.club) {
         $('hero').classList.add('compact');
-        $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
+        $('hero-title').textContent = 'ატარე სიამაყით';
     }
 })();
+
+// "კალათის გასუფთავება" ღილაკი კალათის ბოლოში
+document
+    .querySelector('.cart-footer')
+    .insertAdjacentHTML('beforeend', `<button class="cart-clear" data-cart-clear hidden>${CLEAR_LABEL}</button>`);
 
 $('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
