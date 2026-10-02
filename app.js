@@ -6,7 +6,7 @@ const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
 const LEAGUE_ORDER = [
-    'ᲞᲠᲔᲛᲘᲔᲠ ᲚᲘᲒᲐ',
+    'პრემიერ ლიგა',
     'ლა ლიგა',
     'ლიგა 1',
     'სერია A',
