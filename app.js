@@ -1,7 +1,6 @@
 const SHEET_ID = '1UHjLOQkVkDI1Y8qmJLHHwRbcRfpc3WSY2iKNpIvWnUY';
 const SHEET_TITLE = 'ELEVEN Products';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_TITLE)}`;
-const WHATSAPP_NUMBER = '995598717075';
 const NO_IMAGE = 'https://placehold.co/600x600?text=No+Image';
 const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', '2XL', 'XXL', '3XL', '4XL', '5XL'];
 
@@ -551,32 +550,6 @@ function cartClearClick(btn) {
     }, 3000);
 }
 
-function checkout() {
-    const lines = cartDetails();
-    if (!lines.length) return alert('კალათა ცარიელია!');
-    const name = $('order-name').value.trim(),
-        phone = $('order-phone').value.trim(),
-        address = $('order-address').value.trim();
-    if (!name || !phone || !address) return alert('შეავსე სახელი, ტელეფონი და მისამართი.');
-    const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
-    const msg = [
-        'ახალი შეკვეთა ELEVEN-ზე:',
-        '',
-        ...lines.map(
-            l =>
-                `• ${l.p.title}${l.size ? ' (' + l.size + ')' : ''}${
-                    l.name || l.num ? ' [გვარი: ' + (l.name || '-') + ', ნომერი: ' + (l.num || '-') + ']' : ''
-                }${l.patches ? ' [პაჩები და ბეიჯები]' : ''} × ${l.qty} = ${l.qty * l.p.price} ₾`
-        ),
-        '',
-        `სულ: ${total} ₾`,
-        `სახელი: ${name}`,
-        `ტელეფონი: ${phone}`,
-        `მისამართი: ${address}`
-    ].join('\n');
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${enc(msg)}`, '_blank');
-}
-
 /* ===== პერსონალიზაცია ===== */
 const persCleanName = v =>
     v.toUpperCase().replace(/[^A-Z ]/g, '').replace(/^\s+/, '').replace(/\s{2,}/g, ' ').slice(0, 15);
@@ -847,11 +820,6 @@ window.addEventListener('hashchange', readHash);
         $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
     }
 })();
-
-// "კალათის გასუფთავება" ღილაკი კალათის ბოლოში
-document
-    .querySelector('.cart-footer')
-    .insertAdjacentHTML('beforeend', `<button class="cart-clear" data-cart-clear hidden>${CLEAR_LABEL}</button>`);
 
 $('search').placeholder = 'მოძებნე სასურველი პროდუქტი...';
 
