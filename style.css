@@ -591,7 +591,7 @@ footer .logo { font-size: 1.2rem; }
     }
 
     .logo-img {
-        height: 24px;
+        height: 20px;
     }
 
     .navbar #search {
@@ -803,8 +803,6 @@ footer .logo { font-size: 1.2rem; }
 }
 
 body,
-.logo,
-.hero-number,
 .product-card .price,
 .product-card .price s,
 .pdp-price,
@@ -814,14 +812,18 @@ body,
     font-synthesis: none;
 }
 
+.logo,
+.hero-number,
 .hero h1,
 #result-count {
     font-family: var(--font-ultra);
+    font-weight: 900;
+    font-synthesis: none;
 }
 
 /* ===== ლოგო + ფუტერი ===== */
-.logo { display: inline-flex; align-items: center; gap: 10px; }
-.logo-img { height: 32px; width: auto; display: block; }
+.logo { display: inline-flex; align-items: center; gap: 8px; }
+.logo-img { height: 26px; width: auto; display: block; }
 
 .footer-content { justify-content: center; text-align: center; }
 
