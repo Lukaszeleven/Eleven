@@ -34,9 +34,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(14, 19, 16, .97);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: var(--ink);
     color: #fff;
 }
 
@@ -119,7 +117,6 @@ body {
     background: #f0f1ef;
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
-    /* რჩება sticky header-ის ნაწილი — კონტენტი ქვემოთ გადის */
 }
 
 .club-list {
@@ -206,11 +203,11 @@ body {
     flex-wrap: wrap;
     gap: 16px;
     position: sticky;
-    top: var(--header-h, 110px);
+    top: var(--header-h, 120px);
     z-index: 40;
     background: var(--bg);
-    padding: 12px 0;
-    margin-bottom: 20px;
+    padding: 16px 0 12px;
+    margin-bottom: 16px;
 }
 
 .section-title { font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; letter-spacing: -.02em; }
@@ -248,11 +245,11 @@ body {
 
 .filters {
     position: sticky;
-    top: calc(var(--header-h, 110px) + 64px);
+    top: calc(var(--header-h, 120px) + 72px);
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: calc(100vh - var(--header-h, 110px) - 80px);
+    max-height: calc(100vh - var(--header-h, 120px) - 96px);
     overflow-y: auto;
     scrollbar-width: thin;
     padding-bottom: 8px;
