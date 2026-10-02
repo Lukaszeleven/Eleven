@@ -275,7 +275,7 @@ function render() {
     $('hero').classList.toggle('compact', !!f.league || !!f.club);
 
     if (f.league || f.club) {
-        $('hero-title').textContent = 'ატარე სიამაყით';
+        $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
     } else {
         $('hero-title').innerHTML = 'ᲡᲐᲣᲙᲔᲗᲔᲡᲝ<br>ᲝᲜᲚᲐᲘᲜ ᲛᲐᲦᲐᲖᲘᲐ<br>ᲡᲐᲥᲐᲠᲗᲕᲔᲚᲝᲨᲘ';
     }
@@ -821,7 +821,7 @@ window.addEventListener('hashchange', readHash);
     buildLeagueNav();
     if (f.league || f.club) {
         $('hero').classList.add('compact');
-        $('hero-title').textContent = 'ატარე სიამაყით';
+        $('hero-title').textContent = 'ᲐᲢᲐᲠᲔ ᲡᲘᲐᲛᲐᲧᲘᲗ';
     }
 })();
 
