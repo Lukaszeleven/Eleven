@@ -697,17 +697,7 @@ function setLeague(league) {
     else location.hash = '';
 }
 
-function syncClubHash() {
-    const base = f.league ? 'league=' + enc(f.league) : '';
-    if (f.clubs.size === 1) {
-        const c = enc([...f.clubs][0]);
-        location.hash = base ? `${base}&club=${c}` : `club=${c}`;
-    } else if (f.league) {
-        location.hash = base;
-    } else {
-        location.hash = '';
-    }
-}
+/* კლუბის ჩექმარკები მხოლოდ UI state — hash არ იცვლება */
 
 document.addEventListener('click', e => {
     const t = e.target;
@@ -726,10 +716,6 @@ document.addEventListener('click', e => {
             ft.setAttribute('aria-expanded', g.classList.contains('open'));
         }
         return;
-    }
-
-    if (t.dataset.club !== undefined || (t.closest && t.closest('[data-club]'))) {
-        return; // handled by change event
     }
 
     if (t.dataset.psize) {
@@ -768,7 +754,6 @@ document.addEventListener('click', e => {
         f.types.clear();
         f.sizes.clear();
         f.clubs.clear();
-        syncClubHash();
         render();
     }
     if (t.id === 'cart-modal') toggleCartModal();
@@ -778,7 +763,6 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
     if (e.target.dataset.club !== undefined) {
         e.target.checked ? f.clubs.add(e.target.dataset.club) : f.clubs.delete(e.target.dataset.club);
-        syncClubHash();
         render();
         return;
     }
