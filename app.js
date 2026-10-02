@@ -501,8 +501,9 @@ function updateCartUI() {
     const count = lines.reduce((s, l) => s + l.qty, 0);
     const total = lines.reduce((s, l) => s + l.qty * l.p.price, 0);
     localStorage.setItem('eleven-cart-v2', JSON.stringify(cart));
-    $('cart-count').textContent = count;
-    $('cart-total').textContent = total;
+    const badge = $('cart-count');
+    badge.textContent = count;
+    badge.hidden = count === 0;
     $('modal-cart-total').textContent = total;
     const cc = document.querySelector('[data-cart-clear]');
     if (cc) cc.hidden = !cart.length;
@@ -530,24 +531,10 @@ function toggleCartModal() {
     $('cart-modal').classList.toggle('open');
 }
 
-// კალათის გასუფთავება: პირველი დაჭერა ამოწმებს, მეორე (3 წამში) ასუფთავებს
-let clearTimer;
-const CLEAR_LABEL = 'კალათის გასუფთავება';
-function cartClearClick(btn) {
-    clearTimeout(clearTimer);
-    if (btn.dataset.armed) {
-        delete btn.dataset.armed;
-        btn.textContent = CLEAR_LABEL;
-        cart = [];
-        updateCartUI();
-        return;
-    }
-    btn.dataset.armed = '1';
-    btn.textContent = 'დააჭირე თავიდან დასადასტურებლად';
-    clearTimer = setTimeout(() => {
-        delete btn.dataset.armed;
-        btn.textContent = CLEAR_LABEL;
-    }, 3000);
+// კალათის გასუფთავება — ერთი დაჭერით
+function cartClearClick() {
+    cart = [];
+    updateCartUI();
 }
 
 /* ===== პერსონალიზაცია ===== */
