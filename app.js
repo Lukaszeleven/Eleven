@@ -299,35 +299,61 @@ function render() {
         (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)
     );
 
+    const openKeys = new Set(
+        [...document.querySelectorAll('#filters .f-group.open')].map(g => g.dataset.fkey)
+    );
+    const chevron =
+        '<svg class="f-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+    const fSection = (key, title, count, body) => {
+        const open = openKeys.has(key) ? ' open' : '';
+        const badge = count ? `<span class="f-head-count">${count}</span>` : '';
+        return `<div class="f-group${open}" data-fkey="${key}">
+            <button type="button" class="f-head" data-ftoggle aria-expanded="${openKeys.has(key)}">
+                <span class="f-head-title">${title}</span>${badge}${chevron}
+            </button>
+            <div class="f-body">${body}</div>
+        </div>`;
+    };
+
     let filtersHTML = '';
 
     if (clubsInScope.length) {
-        filtersHTML += `<div class="f-group"><h4>გუნდი</h4><div class="chips">`;
-        filtersHTML += `<button data-fclub="" class="${!f.club ? 'on' : ''}">ყველა</button>`;
-        filtersHTML += clubsInScope
-            .map(c => `<button data-fclub="${esc(c)}" class="${f.club === c ? 'on' : ''}">${esc(c)}</button>`)
-            .join('');
-        filtersHTML += `</div></div>`;
+        const body =
+            `<div class="chips">` +
+            `<button data-fclub="" class="${!f.club ? 'on' : ''}">ყველა</button>` +
+            clubsInScope
+                .map(c => `<button data-fclub="${esc(c)}" class="${f.club === c ? 'on' : ''}">${esc(c)}</button>`)
+                .join('') +
+            `</div>`;
+        filtersHTML += fSection('club', 'გუნდი', f.club ? 1 : 0, body);
     }
 
     if (types.length) {
-        filtersHTML += `<div class="f-group"><h4>ტიპი</h4>${types
+        const body = types
             .map(
                 t =>
                     `<label><input type="checkbox" data-type="${esc(t)}" ${
                         f.types.has(t) ? 'checked' : ''
                     }> ${esc(t)}</label>`
             )
-            .join('')}</div>`;
+            .join('');
+        filtersHTML += fSection('type', 'ტიპი', f.types.size, body);
     }
 
     if (sizes.length) {
-        filtersHTML += `<div class="f-group"><h4>ზომა</h4><div class="chips">${sizes
-            .map(s => `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`)
-            .join('')}</div></div>`;
+        const body =
+            `<div class="chips">` +
+            sizes
+                .map(s => `<button data-fsize="${esc(s)}" class="${f.sizes.has(s) ? 'on' : ''}">${esc(s)}</button>`)
+                .join('') +
+            `</div>`;
+        filtersHTML += fSection('size', 'ზომა', f.sizes.size, body);
     }
 
-    filtersHTML += '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
+    if (f.club || f.types.size || f.sizes.size) {
+        filtersHTML += '<button class="f-clear" data-clear>ფილტრის გასუფთავება</button>';
+    }
     $('filters').innerHTML = filtersHTML;
 
     $('products-container').innerHTML = list.length
