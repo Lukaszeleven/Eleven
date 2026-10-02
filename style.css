@@ -747,21 +747,21 @@ footer .logo { font-size: 1.2rem; }
     src: url('Fonts/Eleven-Light.woff2') format('woff2');
     font-weight: 300;
     font-style: normal;
-    font-display: swap;
+    font-display: block;
 }
 @font-face {
     font-family: 'Eleven';
     src: url('Fonts/Eleven-Regular.woff2') format('woff2');
     font-weight: 400 900;
     font-style: normal;
-    font-display: swap;
+    font-display: block;
 }
 @font-face {
     font-family: 'Eleven Ultra';
     src: url('Fonts/Eleven-UltraBold.woff2') format('woff2');
     font-weight: 100 900;
     font-style: normal;
-    font-display: swap;
+    font-display: block;
 }
 
 :root {
@@ -792,7 +792,7 @@ body,
 
 .footer-content { justify-content: center; text-align: center; }
 
-/* ===== პერსონალიზაცია (ჩასვი style.css-ის ბოლოში) ===== */
+/* ===== პერსონალიზაცია ===== */
 .pers-btn {
     width: 100%;
     margin-bottom: 12px;
@@ -948,9 +948,7 @@ body,
     .pers-cnt { right: 14px; }
     .pers-w-num .pers-cnt { right: 8px; }
 }
-
-
-/* ===== პროდუქტის ფოტო-გალერეა (ჩასვი style.css-ის ბოლოში) ===== */
+/* ===== პროდუქტის ფოტო-გალერეა ===== */
 .pdp-gallery { position: sticky; top: 130px; }
 .pdp-gallery .pdp-img { position: relative !important; top: auto; }
 
