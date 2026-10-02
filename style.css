@@ -997,13 +997,3 @@ body,
     .gal-nav.prev { left: 8px; }
     .gal-nav.next { right: 8px; }
 }
-
-/* ===== UPPERCASE + ULTRA BOLD: ლიგების მენიუ და მთავარი ტექსტი ===== */
-.club-list a,
-.hero h1 {
-    font-family: var(--font-ultra);
-    font-weight: 900;
-    text-transform: uppercase;
-}
-
-.club-list a { letter-spacing: .03em; }
