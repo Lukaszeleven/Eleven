@@ -74,16 +74,11 @@
             </div>
             <ul id="cart-items-list" class="cart-items"></ul>
             <div class="cart-footer">
-                <div class="order-form">
-                    <input id="order-name" type="text" placeholder="სახელი და გვარი" autocomplete="name">
-                    <input id="order-phone" type="tel" placeholder="ტელეფონი" autocomplete="tel">
-                    <input id="order-address" type="text" placeholder="მისამართი" autocomplete="street-address">
-                </div>
                 <div class="cart-total-text">
                     <span>სულ ჯამი</span>
                     <strong><span id="modal-cart-total">0</span> ₾</strong>
                 </div>
-                <button class="checkout-btn" onclick="checkout()">შეკვეთის გაგზავნა WhatsApp-ით</button>
+                <button class="checkout-btn cart-clear" data-cart-clear hidden>კალათის გასუფთავება</button>
             </div>
         </div>
     </div>
